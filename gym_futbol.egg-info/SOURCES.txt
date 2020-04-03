@@ -1,0 +1,7 @@
+README.md
+setup.py
+gym_futbol.egg-info/PKG-INFO
+gym_futbol.egg-info/SOURCES.txt
+gym_futbol.egg-info/dependency_links.txt
+gym_futbol.egg-info/requires.txt
+gym_futbol.egg-info/top_level.txt
