@@ -1,4 +1,4 @@
-kfrom setuptools import setup
+from setuptools import setup
 
 setup(name='gym_futbol',
       version='0.0.1',
