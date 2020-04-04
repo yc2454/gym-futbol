@@ -3,6 +3,14 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import pandas as pd
 import numpy as np
+from action import Action
+from vector import Vector
+from team import Team
+from field import Field
+from player import Player
+from ball import Ball
+import math
+import time
 
 class FutbolEnv(gym.Env):
   """Custom Environment that follows gym interface"""
@@ -34,24 +42,16 @@ class FutbolEnv(gym.Env):
   # Execute one time step within the environment
   def step(self, action):
     self._take_action(action)
-
     self.current_step += 1
-
     # calculate reward
     reward = 0
-
     # figure out whether the process is done
     done = False
-
     obs = self._next_observation()
-
     return obs, reward, done, {}
 
   # Reset the state of the environment to an initial state
   def reset(self):
-    
-    # reset the state
-
     return self._next_observation()
 
   # Render the environment to the screen
