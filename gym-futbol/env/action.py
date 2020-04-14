@@ -1,7 +1,7 @@
 import enum
 
 class Action(enum.Enum):
-    intercept = 1
-    assist = 2
-    run = 3
-    shoot = 4
+    RUN = 1
+    PASS = 2
+    TACKLE = 3
+    SHOOT = 4
