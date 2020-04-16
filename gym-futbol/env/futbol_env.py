@@ -4,7 +4,7 @@ import numpy as np
 import math
 import time
 from action import Action
-from team import Team
+from ballowner import BallOwner
 import random
 
 # constants
@@ -50,7 +50,7 @@ class FutbolEnv(gym.Env):
             # position and movement of opponent player
             self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             # who has the ball
-            self.ball_owner = Team.AI
+            self.ball_owner = BallOwner.NOONE
 
 
       def _take_action(self, action):
@@ -67,14 +67,8 @@ class FutbolEnv(gym.Env):
             else:
                   g2b, g2b_mag = get_vec(np.array([FIELD_LEN, GOAL_UPPER]), self.ball[:2])
 
-            # vector from opponent to ai
-            o2a, o2a_mag = get_vec(self.opp[:2], self.ai[:2])
-
-            # vector from opponent to ball
-            o2b, o2b_mag = get_vec(self.opp[:2], self.ball[:2])
-
             if action_type == Action.SHOOT:
-                  if b2a_mag > 0.5:
+                  if self.ball_owner != BallOwner.AI:
                         pass
                   else:
                         self.ball[0] += self.ball[4] * (g2b[0] / g2b_mag)
@@ -86,35 +80,46 @@ class FutbolEnv(gym.Env):
                         self.opp[2:4] = o2b
 
             elif action_type == Action.TACKLE:
-                  if b2a_mag > 0.5:
+                  if ((b2a_mag > 0.5) or (self.ball_owner == BallOwner.AI)):
                         pass
                   else:
                         succ_p = random.random()
                         if succ_p < 0.3:
                               self.ball = self.ai
+                              self.ball_owner = BallOwner.AI
 
             elif action_type == Action.RUN:
                   self.ai[2:4] = b2a
                   self.ai[0] += self.ai[4] * (b2a[0] / b2a_mag)
                   self.ai[0] += self.ai[4] * (b2a[1] / b2a_mag)
+                  o2a, o2a_mag = get_vec(self.opp[:2], self.ai[:2])
+                  self.opp[0] += self.opp[4] * (o2a[0] / o2a_mag)
+                  self.opp[1] += self.opp[4] * (o2a[1] / o2a_mag)
+                  self.opp[2:4] = o2a
 
             else:
                   print('Unrecognized action %d' % action_type)
 
 
       def _next_observation(self):
-            return np.concatenate((self.opp, self.ball)).reshape((2, 5))
+            return (np.concatenate((self.opp, self.ball)).reshape((2, 5)), self.ball_owner)
 
 
       def _get_reward(self, ball, ai, opp):
 
             ball_advance = ball[:2] - self.ball[:2]
             ball_advance_mag = math.sqrt(ball_advance[0]**2 + ball_advance[1]**2)
+
             player_adv = ai[:2] - self.ai[:2]
             player_adv_mag = math.sqrt(player_adv[0]**2 + player_adv[1]**2)
             player_adv_mag /= math.sqrt(self.ai[0]**2 + self.ai[1]**2)
 
-            return ball_advance_mag + player_adv_mag
+            if self.ball_owner == BallOwner.AI:
+                  get_ball = 0.5 * (ball_advance_mag + player_adv_mag)
+            else:
+                  get_ball = 0
+
+            return ball_advance_mag + player_adv_mag + get_ball
 
       # Execute one time step within the environment
       def step(self, action):
