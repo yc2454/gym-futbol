@@ -4,6 +4,7 @@ import numpy as np
 import math
 import time
 from action import Action
+from team import Team
 import random
 
 # constants
@@ -15,32 +16,41 @@ BALL_SPEED = 20
 PLARYER_SPEED = 9
 GAME_TIME = 600
 
+def get_vec(coor1, coor2):
+      vec = coor1[:2] - coor2[:2]
+      vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
+      return vec, vec_mag
+
 class FutbolEnv(gym.Env):
 
       def __init__(self):
-        # super(FutbolEnv, self).__init__()
-        # Define action and observation space
+            # super(FutbolEnv, self).__init__()
+            # Define action and observation space
 
-        # data structure to contain the 4 actions
-        self.action_space = spaces.Discrete(4)
-        # data structure to contain observations the agent would make in one step
-        # the 5 values in the array represents: x coor, y coor, vector direction
-        # sine, vector direction cosine, vector magnitude
-        self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 2), 
-                                          high=np.array([[FIELD_LEN, FIELD_WID, 1.0, 1.0, PLARYER_SPEED],
-                                          [FIELD_LEN, FIELD_WID, 1.0, 1.0, BALL_SPEED]]))
-        # initial space
-        self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
-                                    high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
-                                    [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]]))
-        # current time in the match, in seconds
-        self.time = 0
-        # position and movement of the ball
-        self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-        # position and movement of AI player
-        self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-        # position and movement of opponent player
-        self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            # data structure to contain the 4 actions
+            self.action_space = spaces.Discrete(4)
+            # data structure to contain observations the agent would make in one step
+            # the 5 values in the array represents: x coor, y coor, vector direction
+            # sine, vector direction cosine, vector magnitude
+            self.observation_space = spaces.Tuple((spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 2), 
+                                                      high=np.array([[FIELD_LEN, FIELD_WID, 1.0, 1.0, PLARYER_SPEED],
+                                                      [FIELD_LEN, FIELD_WID, 1.0, 1.0, BALL_SPEED]])),
+                                                      spaces.Discrete(2)))
+            # initial space
+            self.init_space = spaces.Tuple((spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
+                                          high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
+                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]])),
+                                          spaces.Discrete(2)))
+            # current time in the match, in seconds
+            self.time = 0
+            # position and movement of the ball
+            self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            # position and movement of AI player
+            self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            # position and movement of opponent player
+            self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            # who has the ball
+            self.ball_owner = Team.AI
 
 
       def _take_action(self, action):
@@ -48,27 +58,35 @@ class FutbolEnv(gym.Env):
             action_type = action
 
             # vector from ball to ai player
-            b2p = self.ball[:2] - self.ai[:2]
-            b2p_mag = math.sqrt(b2p[0]**2 + b2p[1]**2)
+            b2a, b2a_mag = get_vec(self.ball[:2], self.ai[:2])
 
             # vector from one of the goal tips to the ball
             prob = random.random()
             if prob > 0.5:
-                  b2g = np.array([FIELD_LEN, GOAL_LOWER]) - self.ball[:2]
+                  g2b, g2b_mag = get_vec(np.array([FIELD_LEN, GOAL_LOWER]), self.ball[:2])
             else:
-                  b2g = np.array([FIELD_LEN, GOAL_UPPER]) - self.ball[:2]
-            b2g_mag = math.sqrt(b2g[0]**2 + b2g[1]**2)
+                  g2b, g2b_mag = get_vec(np.array([FIELD_LEN, GOAL_UPPER]), self.ball[:2])
+
+            # vector from opponent to ai
+            o2a, o2a_mag = get_vec(self.opp[:2], self.ai[:2])
+
+            # vector from opponent to ball
+            o2b, o2b_mag = get_vec(self.opp[:2], self.ball[:2])
 
             if action_type == Action.SHOOT:
-                  if b2p_mag > 0.5:
+                  if b2a_mag > 0.5:
                         pass
                   else:
-                        self.ball[0] += self.ball[4] * (b2g[0] / b2g_mag)
-                        self.ball[1] += self.ball[4] * (b2g[1] / b2g_mag)
-                        self.ball[2:3] = b2g
+                        self.ball[0] += self.ball[4] * (g2b[0] / g2b_mag)
+                        self.ball[1] += self.ball[4] * (g2b[1] / g2b_mag)
+                        self.ball[2:4] = g2b
+                        o2b, o2b_mag = get_vec(self.opp[:2], self.ball[:2])
+                        self.opp[0] += self.opp[4] * (o2b[0] / o2b_mag)
+                        self.opp[1] += self.opp[4] * (o2b[1] / o2b_mag)
+                        self.opp[2:4] = o2b
 
             elif action_type == Action.TACKLE:
-                  if b2p_mag > 0.5:
+                  if b2a_mag > 0.5:
                         pass
                   else:
                         succ_p = random.random()
@@ -76,7 +94,9 @@ class FutbolEnv(gym.Env):
                               self.ball = self.ai
 
             elif action_type == Action.RUN:
-                  self.ai[:2] = b2p
+                  self.ai[2:4] = b2a
+                  self.ai[0] += self.ai[4] * (b2a[0] / b2a_mag)
+                  self.ai[0] += self.ai[4] * (b2a[1] / b2a_mag)
 
             else:
                   print('Unrecognized action %d' % action_type)
@@ -95,7 +115,6 @@ class FutbolEnv(gym.Env):
             player_adv_mag /= math.sqrt(self.ai[0]**2 + self.ai[1]**2)
 
             return ball_advance_mag + player_adv_mag
-
 
       # Execute one time step within the environment
       def step(self, action):

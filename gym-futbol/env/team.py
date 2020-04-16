@@ -1,5 +1,5 @@
 import enum
 
 class Team(enum.Enum):
-    left = 1
-    right = 2
+    AI = 1
+    OPP = 2
