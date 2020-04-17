@@ -25,8 +25,6 @@ class FutbolEnv(gym.Env):
 
       def __init__(self):
             # super(FutbolEnv, self).__init__()
-            # Define action and observation space
-
             # data structure to contain the 4 actions
             self.action_space = spaces.Discrete(4)
             # data structure to contain observations the agent would make in one step
@@ -89,10 +87,12 @@ class FutbolEnv(gym.Env):
                               self.ball_owner = BallOwner.AI
 
             elif action_type == Action.RUN:
+                  self.ai[4] = PLARYER_SPEED
                   self.ai[2:4] = b2a
                   self.ai[0] += self.ai[4] * (b2a[0] / b2a_mag)
                   self.ai[0] += self.ai[4] * (b2a[1] / b2a_mag)
                   o2a, o2a_mag = get_vec(self.opp[:2], self.ai[:2])
+                  self.opp[4] = PLARYER_SPEED
                   self.opp[0] += self.opp[4] * (o2a[0] / o2a_mag)
                   self.opp[1] += self.opp[4] * (o2a[1] / o2a_mag)
                   self.opp[2:4] = o2a
@@ -120,6 +120,7 @@ class FutbolEnv(gym.Env):
                   get_ball = 0
 
             return ball_advance_mag + player_adv_mag + get_ball
+
 
       # Execute one time step within the environment
       def step(self, action):
