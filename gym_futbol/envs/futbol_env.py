@@ -62,27 +62,41 @@ def screw_vec(vec, vec_mag):
 class FutbolEnv(gym.Env):
 
       def __init__(self):
+
             # super(FutbolEnv, self).__init__()
+
             # data structure to contain the 3 actions
             self.action_space = spaces.Discrete(3)
+
             # data structure to contain observations the agent would make in one step
-            # the 5 values in the array represents: x coor, y coor, vector direction
-            # sine, vector direction cosine, vector magnitude
+            # the 5 values in the array represents: 
+            # [0]: x coor, 
+            # [1]: y coor, 
+            # [2]: target x coor - object x coor
+            # [3]: target y coor - object y coor
+            # [4]: speed magnitude
             self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 2), 
                                                       high=np.array([[FIELD_LEN, FIELD_WID, 1.0, 1.0, PLARYER_SPEED_W_BALL],
                                                       [FIELD_LEN, FIELD_WID, 1.0, 1.0, BALL_SPEED]]))
+            
             # initial space
             self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
                                           high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
                                           [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]]))
+            
             # current time in the match, in seconds
             self.time = 0
+
+            # below are the coordinates and vectors of ball, agent and opponent, 
+            # refer to the observation_space comment
+            #  
             # position and movement of the ball
             self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             # position and movement of AI player
             self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             # position and movement of opponent player
             self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            
             # who has the ball
             self.ball_owner = BallOwner.NOONE
 
@@ -124,6 +138,7 @@ class FutbolEnv(gym.Env):
             b2o, b2o_mag = get_vec(self.ball[:2], self.opp[:2])
 
             # vector from one of the goal tips to the ball
+            # the shooter randomly chooses to aim for the upper or lower goal tip
             prob = random.random()
             if prob > 0.5:
                   rg2b, rg2b_mag = get_vec(np.array([FIELD_LEN, GOAL_LOWER]), self.ball[:2])
@@ -180,6 +195,7 @@ class FutbolEnv(gym.Env):
                         if self.out_of_field():
                               self.fix(BallOwner.AI)
 
+            # if the ball is close enough to the agent, try taking it
             elif action_type == Action.TACKLE:
                   if ((b2a_mag > 0.5) or (self.ball_owner == BallOwner.AI)):
                         pass
