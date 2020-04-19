@@ -30,15 +30,13 @@ class FutbolEnv(gym.Env):
             # data structure to contain observations the agent would make in one step
             # the 5 values in the array represents: x coor, y coor, vector direction
             # sine, vector direction cosine, vector magnitude
-            self.observation_space = spaces.Tuple((spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 2), 
+            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 2), 
                                                       high=np.array([[FIELD_LEN, FIELD_WID, 1.0, 1.0, PLARYER_SPEED],
-                                                      [FIELD_LEN, FIELD_WID, 1.0, 1.0, BALL_SPEED]])),
-                                                      spaces.Discrete(2)))
+                                                      [FIELD_LEN, FIELD_WID, 1.0, 1.0, BALL_SPEED]]))
             # initial space
-            self.init_space = spaces.Tuple((spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
+            self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
                                           high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
-                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]])),
-                                          spaces.Discrete(2)))
+                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]]))
             # current time in the match, in seconds
             self.time = 0
             # position and movement of the ball
@@ -102,7 +100,7 @@ class FutbolEnv(gym.Env):
 
 
       def _next_observation(self):
-            return (np.concatenate((self.opp, self.ball)).reshape((2, 5)), self.ball_owner)
+            return np.concatenate((self.opp, self.ball)).reshape((2, 5))
 
 
       def _get_reward(self, ball, ai, opp):
