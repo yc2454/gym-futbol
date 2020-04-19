@@ -17,18 +17,33 @@ PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
 GAME_TIME = 600
 
+# get the vector pointing from [coor2] to [coor1] and 
+# its magnitude
 def get_vec(coor1, coor2):
       vec = coor1[:2] - coor2[:2]
       vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
       return vec, vec_mag
 
+# move the [loc] according to [vec]
 def move_by_vec(vec, vec_mag, loc):
       if vec_mag == 0:
             pass
       else:
-            loc[0] += loc[4] * (vec[0] / vec_mag)
-            loc[1] += loc[4] * (vec[1] / vec_mag)
+            loc[0] += loc[4] * (vec[0] * 1.0 / vec_mag)
+            loc[1] += loc[4] * (vec[1] * 1.0 / vec_mag)
             loc[2:4] = vec
+
+# twist the direction of vector [vec] a little
+def screw_vec(vec, vec_mag):
+      i = vec[0] * 1.0 / vec_mag
+      j = vec[1] * 1.0 / vec_mag
+      twist_angle = (random.randint(-30, 30) * 1.0 / 180) * math.pi
+      twist_sin = math.sin(twist_angle)
+      twist_cos = math.cos(twist_angle)
+      twisted_i = (j * twist_cos) - (i * twist_sin)
+      twisted_j = (i * twist_cos) + (j * twist_sin)
+      twisted_vec = np.array([twisted_i * vec_mag, twisted_j * vec_mag])
+      return twisted_vec
 
 class FutbolEnv(gym.Env):
 
@@ -77,24 +92,41 @@ class FutbolEnv(gym.Env):
                   rg2b, rg2b_mag = get_vec(np.array([FIELD_LEN, GOAL_UPPER]), self.ball[:2])
                   lg2b, lg2b_mag = get_vec(np.array([0, GOAL_LOWER]), self.ball[:2])
 
-            # opponent act
-            if b2o_mag < 0.5:
-                  tackle_p = random.random()
-                  if tackle_p < 0.5:
-                        succ_p = random.random()
-                        if succ_p <0.3:
-                              self.ball = self.opp
-                              self.ball_owner = BallOwner.OPP
+            # by 0.5 chance, opponent act first, and if the ball is close enough, 
+            # kick or take the ball
+            opp_act_first = random.random()
+            if opp_act_first < 0.5:
+                  if b2o_mag < 0.5:
+                        tackle_p = random.random()
+                        if tackle_p < 0.5:
+                              # tackle for the ball
+                              succ_p = random.random()
+                              if succ_p <0.3:
+                                    self.ball = self.opp
+                                    self.ball_owner = BallOwner.OPP
+                              else:
+                                    pass
+                        else:
+                              # shoot the ball
+                              # blur the shooting direction a little
+                              s_lg2b = screw_vec(lg2b, lg2b_mag)
+                              self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10)
+                              move_by_vec(s_lg2b, lg2b_mag, self.ball)
                   else:
-                        self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10)
-                        move_by_vec(lg2b, lg2b_mag, self.ball)
+                        pass
+            else:
+                  pass
 
             if action_type == Action.SHOOT:
                   if self.ball_owner != BallOwner.AI:
                         pass
                   else:
-                        self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10)
-                        move_by_vec(rg2b, rg2b_mag, self.ball)
+                        # blur the shooting direction a little
+                        s_rg2b = screw_vec(rg2b, rg2b_mag)
+                        # set ball speed
+                        self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10) * 1.0
+                        move_by_vec(s_rg2b, rg2b_mag, self.ball)
+                        # opponent run towards the ball
                         self.opp[4] = PLARYER_SPEED_WO_BALL
                         move_by_vec(b2o, b2o_mag, self.opp)
 
@@ -108,8 +140,8 @@ class FutbolEnv(gym.Env):
                               self.ball_owner = BallOwner.AI
 
             elif action_type == Action.RUN:
-                  self.ai[4] = random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
-                  self.opp[4] = random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
+                  self.ai[4] = 1.0 * random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
+                  self.opp[4] = 1.0 * random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
                   o2a, o2a_mag = get_vec(self.opp[:2], self.ai[:2])
                   # if agent has the ball, agent run toward the goal, opp chase the 
                   # agent
