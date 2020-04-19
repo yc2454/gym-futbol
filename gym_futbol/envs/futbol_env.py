@@ -25,8 +25,8 @@ class FutbolEnv(gym.Env):
 
       def __init__(self):
             # super(FutbolEnv, self).__init__()
-            # data structure to contain the 4 actions
-            self.action_space = spaces.Discrete(4)
+            # data structure to contain the 3 actions
+            self.action_space = spaces.Discrete(3)
             # data structure to contain observations the agent would make in one step
             # the 5 values in the array represents: x coor, y coor, vector direction
             # sine, vector direction cosine, vector magnitude
@@ -51,7 +51,7 @@ class FutbolEnv(gym.Env):
 
       def _take_action(self, action):
 
-            action_type = action
+            action_type = Action(action)
 
             # vector from ball to ai player
             b2a, b2a_mag = get_vec(self.ball[:2], self.ai[:2])
