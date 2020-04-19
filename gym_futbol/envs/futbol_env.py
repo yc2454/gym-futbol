@@ -148,7 +148,7 @@ class FutbolEnv(gym.Env):
             self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             self.ball_owner = BallOwner.NOONE
-            return self._next_observation
+            return self._next_observation()
 
 
       # Render the environment to the screen
