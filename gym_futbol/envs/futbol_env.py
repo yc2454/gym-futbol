@@ -67,10 +67,12 @@ class FutbolEnv(gym.Env):
                   if self.ball_owner != BallOwner.AI:
                         pass
                   else:
+                        self.ball[4] = BALL_SPEED
                         self.ball[0] += self.ball[4] * (g2b[0] / g2b_mag)
                         self.ball[1] += self.ball[4] * (g2b[1] / g2b_mag)
                         self.ball[2:4] = g2b
                         o2b, o2b_mag = get_vec(self.opp[:2], self.ball[:2])
+                        self.opp[4] = PLARYER_SPEED
                         self.opp[0] += self.opp[4] * (o2b[0] / o2b_mag)
                         self.opp[1] += self.opp[4] * (o2b[1] / o2b_mag)
                         self.opp[2:4] = o2b
