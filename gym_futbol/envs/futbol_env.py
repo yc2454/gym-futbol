@@ -23,9 +23,12 @@ def get_vec(coor1, coor2):
       return vec, vec_mag
 
 def move_by_vec(vec, vec_mag, loc):
-      loc[0] += loc[4] * (vec[0] / vec_mag)
-      loc[1] += loc[4] * (vec[1] / vec_mag)
-      loc[2:4] = vec
+      if vec_mag == 0:
+            pass
+      else:
+            loc[0] += loc[4] * (vec[0] / vec_mag)
+            loc[1] += loc[4] * (vec[1] / vec_mag)
+            loc[2:4] = vec
 
 class FutbolEnv(gym.Env):
 
@@ -73,6 +76,18 @@ class FutbolEnv(gym.Env):
             else:
                   rg2b, rg2b_mag = get_vec(np.array([FIELD_LEN, GOAL_UPPER]), self.ball[:2])
                   lg2b, lg2b_mag = get_vec(np.array([0, GOAL_LOWER]), self.ball[:2])
+
+            # opponent act
+            if b2o_mag < 0.5:
+                  tackle_p = random.random()
+                  if tackle_p < 0.5:
+                        succ_p = random.random()
+                        if succ_p <0.3:
+                              self.ball = self.opp
+                              self.ball_owner = BallOwner.OPP
+                  else:
+                        self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10)
+                        move_by_vec(lg2b, lg2b_mag, self.ball)
 
             if action_type == Action.SHOOT:
                   if self.ball_owner != BallOwner.AI:
@@ -134,7 +149,17 @@ class FutbolEnv(gym.Env):
             else:
                   get_ball = 0
 
-            return ball_advance_mag + player_adv_mag + get_ball
+            if self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER):
+                  score = 5 * (ball_advance_mag + player_adv_mag)
+            else:
+                  score = 0
+
+            if self.ball[0] <= 0 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER):
+                  get_scored = -5 * (ball_advance_mag + player_adv_mag)
+            else:
+                  get_scored = 0
+
+            return ball_advance_mag + player_adv_mag + get_ball + score + get_scored
 
 
       # Execute one time step within the environment
