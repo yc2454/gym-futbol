@@ -139,7 +139,16 @@ class FutbolEnv(gym.Env):
 
       # Reset the state of the environment to an initial state
       def reset(self):
-            return self.init_space.sample()
+            # initial space
+            self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
+                                          high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
+                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]]))
+            self.time = 0
+            self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.ball_owner = BallOwner.NOONE
+            return self.init_space
 
 
       # Render the environment to the screen
