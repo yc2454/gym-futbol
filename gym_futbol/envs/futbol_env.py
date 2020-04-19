@@ -24,6 +24,15 @@ def get_vec(coor1, coor2):
       vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
       return vec, vec_mag
 
+# fix the coordinated in the range [0, max]
+def lock_in(val, max):
+      if val < 0:
+            return 0
+      elif val > max:
+            return max
+      else:
+            return val
+
 # move the [loc] according to [vec]
 def move_by_vec(vec, vec_mag, loc):
       if vec_mag == 0:
@@ -33,11 +42,16 @@ def move_by_vec(vec, vec_mag, loc):
             loc[1] += loc[4] * (vec[1] * 1.0 / vec_mag)
             loc[2:4] = vec
 
+# a normal distribution array
+nd = np.random.normal(0, 15, 50)
+
 # twist the direction of vector [vec] a little
+# the twist follows normal distribution
 def screw_vec(vec, vec_mag):
       i = vec[0] * 1.0 / vec_mag
       j = vec[1] * 1.0 / vec_mag
-      twist_angle = (random.randint(-30, 30) * 1.0 / 180) * math.pi
+      seed = random.randint(0, 49)
+      twist_angle = (nd[seed] / 180) * math.pi
       twist_sin = math.sin(twist_angle)
       twist_cos = math.cos(twist_angle)
       twisted_i = (j * twist_cos) - (i * twist_sin)
@@ -71,6 +85,32 @@ class FutbolEnv(gym.Env):
             self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             # who has the ball
             self.ball_owner = BallOwner.NOONE
+
+      
+      def out_of_field(self):
+            x = self.ball[0] < 0 or self.ball[0] > FIELD_LEN
+            y = self.ball[1] < 0 or self.ball[1] > FIELD_WID
+            return x or y
+
+      
+      def fix(self, player):
+
+            if player == BallOwner.OPP:
+                  new_owner = BallOwner.AI
+            else:
+                  new_owner = BallOwner.OPP
+
+            # relocate the ball to where it went out
+            lock_in(self.ball[0], FIELD_LEN)
+            lock_in(self.ball[1], FIELD_WID)
+            self.ball_owner = new_owner
+
+            # move the other player and the ball together
+            self.ball[2:5] = np.array([0,0,0])
+            if new_owner == BallOwner.AI:
+                  self.ai = self.ball
+            else:
+                  self.opp = self.ball
 
 
       def _take_action(self, action):
@@ -112,6 +152,11 @@ class FutbolEnv(gym.Env):
                               s_lg2b = screw_vec(lg2b, lg2b_mag)
                               self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10)
                               move_by_vec(s_lg2b, lg2b_mag, self.ball)
+                              # now the ball belongs to no one
+                              self.ball_owner = BallOwner.NOONE
+                              # if the ball is out of the field, fix it
+                              if self.out_of_field():
+                                    self.fix(BallOwner.OPP)
                   else:
                         pass
             else:
@@ -126,9 +171,14 @@ class FutbolEnv(gym.Env):
                         # set ball speed
                         self.ball[4] = random.randint(BALL_SPEED - 20, BALL_SPEED + 10) * 1.0
                         move_by_vec(s_rg2b, rg2b_mag, self.ball)
+                        # now the ball belongs to no one
+                        self.ball_owner = BallOwner.NOONE
                         # opponent run towards the ball
                         self.opp[4] = PLARYER_SPEED_WO_BALL
                         move_by_vec(b2o, b2o_mag, self.opp)
+                        # if the ball is out of the field, fix it
+                        if self.out_of_field():
+                              self.fix(BallOwner.AI)
 
             elif action_type == Action.TACKLE:
                   if ((b2a_mag > 0.5) or (self.ball_owner == BallOwner.AI)):
