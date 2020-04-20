@@ -3,8 +3,11 @@ from gym import error, spaces, utils
 import numpy as np
 import math
 import time
-from action import Action
-from ballowner import BallOwner
+from .action import Action
+#import importlib
+#moduleName = input('ballowner.py')
+#importlib.import_module(moduleName)
+from .ballowner import BallOwner
 import random
 from PIL import Image, ImageDraw
 
@@ -179,7 +182,6 @@ class FutbolEnv(gym.Env):
                         pass
             else:
                   pass
-
             if action_type == Action.SHOOT:
                   if self.ball_owner != BallOwner.AI:
                         pass
@@ -300,4 +302,5 @@ class FutbolEnv(gym.Env):
 
       # Render the environment to the screen
       def render(self, mode='human', close=False):
-            pass
+            raise NotImplementedError
+            
