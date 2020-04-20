@@ -6,6 +6,7 @@ import time
 from action import Action
 from ballowner import BallOwner
 import random
+from PIL import Image, ImageDraw
 
 # constants
 GOAL_UPPER = 296
