@@ -76,13 +76,15 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 2), 
-                                                      high=np.array([[FIELD_LEN, FIELD_WID, 1.0, 1.0, PLARYER_SPEED_W_BALL],
-                                                      [FIELD_LEN, FIELD_WID, 1.0, 1.0, BALL_SPEED]]))
+            self.observation_space = spaces.Box(low=np.array([[0, 0, -FIELD_LEN, -FIELD_WID, 0]] * 3),
+                                                      high=np.array([[FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, PLARYER_SPEED_W_BALL],
+                                                      [FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, PLARYER_SPEED_W_BALL],
+                                                      [FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, BALL_SPEED]]))
             
             # initial space
-            self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 2), 
+            self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 3),
                                           high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
+                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, PLARYER_SPEED_W_BALL],
                                           [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]]))
             
             # current time in the match, in seconds
@@ -231,7 +233,7 @@ class FutbolEnv(gym.Env):
 
 
       def _next_observation(self):
-            return np.concatenate((self.opp, self.ball)).reshape((2, 5))
+            return np.concatenate((self.ai, self.opp, self.ball)).reshape((3, 5))
 
 
       def _get_reward(self, ball, ai, opp):
