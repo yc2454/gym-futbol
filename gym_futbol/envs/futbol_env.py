@@ -99,7 +99,7 @@ class FutbolEnv(gym.Env):
             self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             # position and movement of opponent player
             self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-            
+
             # who has the ball
             self.ball_owner = BallOwner.NOONE
 
@@ -154,9 +154,9 @@ class FutbolEnv(gym.Env):
             # kick or take the ball
             opp_act_first = random.random()
             if opp_act_first < 0.5:
-                  if b2o_mag < 0.5:
+                  if b2o_mag < 2:
                         tackle_p = random.random()
-                        if tackle_p < 0.5:
+                        if tackle_p < 0.5 and self.ball_owner != BallOwner.OPP:
                               # tackle for the ball
                               succ_p = random.random()
                               if succ_p <0.3:
@@ -200,13 +200,20 @@ class FutbolEnv(gym.Env):
 
             # if the ball is close enough to the agent, try taking it
             elif action_type == Action.TACKLE:
-                  if ((b2a_mag > 0.5) or (self.ball_owner == BallOwner.AI)):
+                  if ((b2a_mag > 2) or (self.ball_owner == BallOwner.AI)):
                         pass
                   else:
                         succ_p = random.random()
                         if succ_p < 0.3:
                               self.ball = self.ai
                               self.ball_owner = BallOwner.AI
+                        else:
+                              if self.ball_owner == BallOwner.OPP:
+                                    move_by_vec(lg2b, lg2b_mag, self.opp)
+                                    self.ball = self.opp
+                              else:
+                                    move_by_vec(self.ball[2:4], math.sqrt(self.ball[1]**2 + self.ball[2]**2), self.ball)
+                                    move_by_vec(b2o, b2o_mag, self.opp)
 
             elif action_type == Action.RUN:
                   self.ai[4] = 1.0 * random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
@@ -225,6 +232,7 @@ class FutbolEnv(gym.Env):
                         move_by_vec(o2a, o2a_mag, self.ai)
                   # if neither has the ball, run towards the ball
                   else:
+                        move_by_vec(self.ball[2:4], math.sqrt(self.ball[1]**2 + self.ball[2]**2), self.ball)
                         move_by_vec(b2o, b2o_mag, self.opp)
                         move_by_vec(b2a, b2a_mag, self.ai)
 
