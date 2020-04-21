@@ -80,16 +80,16 @@ class FutbolEnv(gym.Env):
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
             self.observation_space = spaces.Box(low=np.array([[0, 0, -FIELD_LEN, -FIELD_WID, 0]] * 3),
-                                                      high=np.array([[FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, PLARYER_SPEED_W_BALL],
+                                                high=np.array([[FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, PLARYER_SPEED_W_BALL],
                                                       [FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, PLARYER_SPEED_W_BALL],
-                                                      [FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, BALL_SPEED]]))
+                                                      [FIELD_LEN, FIELD_WID, FIELD_LEN, FIELD_WID, BALL_SPEED]]),
+                                                dtype=np.float64)
             
-            # initial space
-            self.init_space = spaces.Box(low=np.array([[FIELD_LEN/2, FIELD_WID/2, 0, 0, 0]] * 3),
-                                          high=np.array([[FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0],
-                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, PLARYER_SPEED_W_BALL],
-                                          [FIELD_LEN/2, FIELD_WID/2, 1.0, 1.0, 0]]))
-            
+            self.obs = self.reset()
+
+      
+      # Reset the state of the environment to an initial state
+      def reset(self):
             # current time in the match, in seconds
             self.time = 0
 
@@ -97,19 +97,21 @@ class FutbolEnv(gym.Env):
             # refer to the observation_space comment
             #  
             # position and movement of the ball
-            self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.ball = np.array([FIELD_LEN/2 - 100, FIELD_WID/2, 0, 0, 0])
             # position and movement of AI player
-            self.ai = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.ai = np.array([FIELD_LEN/2 - 100, FIELD_WID/2, 0, 0, 0])
             # position and movement of opponent player
-            self.opp = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.opp = np.array([FIELD_LEN/2 + 100, FIELD_WID/2, 0, 0, 0])
 
             # who has the ball
-            self.ball_owner = BallOwner.NOONE
+            self.ball_owner = BallOwner.AI
+            self.last_ball_owener = BallOwner.AI
+            return self._next_observation()
 
       
-      def out_of_field(self):
-            x = self.ball[0] < 0 or self.ball[0] > FIELD_LEN
-            y = self.ball[1] < 0 or self.ball[1] > FIELD_WID
+      def out_of_field(self, ob):
+            x = ob[0] < 0 or ob[0] > FIELD_LEN
+            y = ob[1] < 0 or ob[0] > FIELD_WID
             return x or y
 
       
@@ -121,9 +123,10 @@ class FutbolEnv(gym.Env):
                   new_owner = BallOwner.OPP
 
             # relocate the ball to where it went out
-            lock_in(self.ball[0], FIELD_LEN)
-            lock_in(self.ball[1], FIELD_WID)
+            self.ball[0] = lock_in(self.ball[0], FIELD_LEN)
+            self.ball[1] = lock_in(self.ball[1], FIELD_WID)
             self.ball_owner = new_owner
+            self.last_ball_owener = new_owner
 
             # move the other player and the ball together
             self.ball[2:5] = np.array([0,0,0])
@@ -135,6 +138,19 @@ class FutbolEnv(gym.Env):
 
       def _take_action(self, action):
 
+            if self.out_of_field(self.ball):
+                  self.fix(self.last_ball_owener)
+
+            if self.out_of_field(self.ai):
+                  self.ai[0] = lock_in(self.ai[0], FIELD_LEN)
+                  self.ai[1] = lock_in(self.ai[1], FIELD_WID)
+                  self.ai[2:5] = np.array([0,0,0])
+            
+            if self.out_of_field(self.opp):
+                  self.opp[0] = lock_in(self.opp[0], FIELD_LEN)
+                  self.opp[1] = lock_in(self.opp[1], FIELD_WID)
+                  self.opp[2:5] = np.array([0,0,0])
+            
             action_type = Action(action)
 
             # vector from ball to ai player
@@ -165,6 +181,7 @@ class FutbolEnv(gym.Env):
                               if succ_p <0.3:
                                     self.ball = self.opp
                                     self.ball_owner = BallOwner.OPP
+                                    self.last_ball_owener = BallOwner.OPP
                               else:
                                     pass
                         else:
@@ -175,13 +192,12 @@ class FutbolEnv(gym.Env):
                               move_by_vec(s_lg2b, lg2b_mag, self.ball)
                               # now the ball belongs to no one
                               self.ball_owner = BallOwner.NOONE
-                              # if the ball is out of the field, fix it
-                              if self.out_of_field():
-                                    self.fix(BallOwner.OPP)
+                              self.last_ball_owener = BallOwner.OPP
                   else:
                         pass
             else:
                   pass
+
             if action_type == Action.SHOOT:
                   if self.ball_owner != BallOwner.AI:
                         pass
@@ -193,12 +209,10 @@ class FutbolEnv(gym.Env):
                         move_by_vec(s_rg2b, rg2b_mag, self.ball)
                         # now the ball belongs to no one
                         self.ball_owner = BallOwner.NOONE
+                        self.last_ball_owener = BallOwner.AI
                         # opponent run towards the ball
                         self.opp[4] = PLARYER_SPEED_WO_BALL
                         move_by_vec(b2o, b2o_mag, self.opp)
-                        # if the ball is out of the field, fix it
-                        if self.out_of_field():
-                              self.fix(BallOwner.AI)
 
             # if the ball is close enough to the agent, try taking it
             elif action_type == Action.TACKLE:
@@ -209,6 +223,7 @@ class FutbolEnv(gym.Env):
                         if succ_p < 0.3:
                               self.ball = self.ai
                               self.ball_owner = BallOwner.AI
+                              self.last_ball_owener = BallOwner.AI
                         else:
                               if self.ball_owner == BallOwner.OPP:
                                     move_by_vec(lg2b, lg2b_mag, self.opp)
@@ -290,17 +305,26 @@ class FutbolEnv(gym.Env):
             self.time += 1
             return obs, reward, done, {}
 
-      # Reset the state of the environment to an initial state
-      def reset(self):
-            self.time = 0
-            self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-            self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
-            self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
-            self.ball_owner = BallOwner.NOONE
-            return self._next_observation()
-
 
       # Render the environment to the screen
       def render(self, mode='human', close=False):
-            raise NotImplementedError
+
+            fig, ax = plt.subplots()
+            ax.set_xlim(0, FIELD_LEN)
+            ax.set_ylim(0, FIELD_WID)
+
+            # ai
+            ai_x, ai_y, _, _, _ = self.ai
+            ax.plot(ai_x,ai_y, color = 'red', marker='o', markersize=12, label='ai')
+
+            # opp
+            opp_x, opp_y, _, _, _ = self.opp
+            ax.plot(opp_x, opp_y, color = 'blue', marker='o', markersize=12, label='opp')
+
+            # ball
+            ball_x, ball_y, _, _, _ = self.ball
+            ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
+
+            ax.legend()
+            plt.show()
             
