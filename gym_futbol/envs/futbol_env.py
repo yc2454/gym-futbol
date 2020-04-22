@@ -21,6 +21,11 @@ BALL_SPEED = 20
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
 GAME_TIME = 600
+GOAL_REWARD = 2000
+BALL_ADV_REWARD_BASE = 7000
+PLAYER_ADV_REWARD_BASE = 2000
+OUT_OF_FIELD_PENALTY = -600
+BALL_CONTROL = 300
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
@@ -125,7 +130,7 @@ class FutbolEnv(gym.Env):
       
       def score(self):
             ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
-            opp_in = self.ball[0] >= 1000 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
+            opp_in = self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
             return ai_in or opp_in
 
       
@@ -266,34 +271,34 @@ class FutbolEnv(gym.Env):
 
       def _get_reward(self, ball, ai, opp):
 
-            ball_advance = ball[:2] - self.ball[:2]
-            ball_advance_mag = math.sqrt(ball_advance[0]**2 + ball_advance[1]**2)
+            ball_adv = self.ball[0] - ball[0]
 
-            player_adv = ai[:2] - self.ai[:2]
-            player_adv_mag = math.sqrt(player_adv[0]**2 + player_adv[1]**2)
-            player_adv_mag /= math.sqrt(self.ai[0]**2 + self.ai[1]**2)
+            player_adv = self.ai[0] - ai[0] 
+
+            ball_adv_r = (ball_adv/FIELD_LEN) * BALL_ADV_REWARD_BASE
+            player_adv_r = (player_adv/FIELD_LEN) * PLAYER_ADV_REWARD_BASE
 
             if self.out(self.ai):
-                  out_of_field = -3 * (ball_advance_mag + player_adv_mag)
+                  out_of_field = OUT_OF_FIELD_PENALTY
             else:
                   out_of_field = 0
 
             if self.ball_owner == BallOwner.AI:
-                  get_ball = 0.5 * (ball_advance_mag + player_adv_mag)
+                  get_ball = BALL_CONTROL
             else:
                   get_ball = 0
 
-            if self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER):
-                  score = 5 * (ball_advance_mag + player_adv_mag)
+            if self.score() and self.ball[0] <= 0:
+                  score = GOAL_REWARD
             else:
                   score = 0
 
-            if self.ball[0] <= 0 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER):
-                  get_scored = -5 * (ball_advance_mag + player_adv_mag)
+            if self.score() and self.ball[0] >= FIELD_LEN:
+                  get_scored = -GOAL_REWARD
             else:
                   get_scored = 0
 
-            return ball_advance_mag + player_adv_mag + get_ball + score + get_scored + out_of_field
+            return ball_adv_r + player_adv_r + get_ball + score + get_scored + out_of_field
 
 
       # Execute one time step within the environment
@@ -303,7 +308,7 @@ class FutbolEnv(gym.Env):
             # calculate reward
             reward = self._get_reward(o_b, o_ai, o_p)
             # if a ball is scored, reset the players and the ball
-            if self.score:
+            if self.score():
                   if self.ball[0] <= 0:
                         self.ai_score += 1
                   else:
