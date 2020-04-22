@@ -4,6 +4,7 @@ from gym import error, spaces, utils
 
 from ballowner import BallOwner
 from action import Action
+from easy_agent import Easy_Agent
 
 import numpy as np
 import math
@@ -12,8 +13,8 @@ import random
 from PIL import Image, ImageDraw
 
 # constants
-GOAL_UPPER = 29.6
-GOAL_LOWER = 30.4
+GOAL_UPPER = 40
+GOAL_LOWER = 30
 GOAL_SIZE = GOAL_UPPER - GOAL_LOWER
 FIELD_LEN = 105
 FIELD_WID = 68
@@ -73,72 +74,6 @@ def screw_vec(vec, vec_mag):
       twisted_j = (i * twist_cos) + (j * twist_sin)
       twisted_vec = np.array([twisted_i * vec_mag, twisted_j * vec_mag])
       return twisted_vec
-
-class Easy_Agent():
-
-      def __init__(self, name, observations, agent_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 20):
-
-            self.name = name
-
-            self.observations = observations
-            self.agent_index = agent_index
-            self.ball_index = ball_index
-
-            self.team = team 
-
-            if team == 'right':
-                  self.target_x = 0
-                  self.shoot_x = self.target_x + shoot_range
-            else:
-                  self.target_x = length
-                  self.shoot_x = self.target_x - shoot_range
-
-            self.agent_observation = observations[agent_index]
-            self.ball = observations[ball_index]
-            self.has_ball = has_ball
-
-            self.length = length
-            self.width = width
-            self.goal_up = width / 2 + goal_size / 2
-            self.goal_down = width / 2 - goal_size / 2
-
-            self.shoot_range = shoot_range
-
-      def get_action_type(self, observations, has_ball):
-
-            self.agent_observation = observations[self.agent_index]
-            self.ball = observations[self.ball_index]
-            self.has_ball = has_ball
-
-            # data structure to contain observations the agent would make in one step
-            # the 5 values in the array represents: 
-            # [0]: x coor, 
-            # [1]: y coor, 
-            # [2]: target x coor - object x coor
-            # [3]: target y coor - object y coor
-            # [4]: speed magnitude
-
-            ball_to_agent, ball_to_agent_magnitude = get_vec(self.ball[:2], self.agent_observation[:2])
-
-            action_type = 0
-
-            if has_ball:
-
-                  if (self.team == 'right' and self.agent_observation[0] <= self.shoot_x) or (self.team != 'right' and self.agent_observation[0] >= self.shoot_x): 
-                        # shoot
-                        action_type = 2
-                        # print('agent shoot')
-                  else:
-                        # run
-                        action_type = 0
-            else:
-                  if ball_to_agent_magnitude <= 5: 
-                        # intercept
-                        action_type = 1
-                  else: 
-                        # run
-                        action_type = 0
-            return action_type
 
 
 class FutbolEnv(gym.Env):
@@ -223,8 +158,8 @@ class FutbolEnv(gym.Env):
 
       
       def score(self):
-            ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
-            opp_in = self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
+            ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
+            opp_in = self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
             return ai_in or opp_in
 
       #### need further modification
@@ -321,7 +256,7 @@ class FutbolEnv(gym.Env):
 
             ball_observation = self.obs[self.ball_index]
            
-            target_padding = 3
+            target_padding = 1
 
             target_y = random.randint(self.goal_down + target_padding, self.goal_up - target_padding)            
             
@@ -513,7 +448,7 @@ class FutbolEnv(gym.Env):
       def step(self, action_type):
 
             o_b, o_ai, o_p = self.ball, self.ai, self.opp
-            self._take_action(action)
+
             # calculate reward
             reward = self._get_reward(o_b, o_ai, o_p)
 
