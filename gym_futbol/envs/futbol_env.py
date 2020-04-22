@@ -23,8 +23,8 @@ GAME_TIME = 600
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
-def get_vec(coor1, coor2):
-      vec = coor1[:2] - coor2[:2]
+def get_vec(coor_t, coor_o):
+      vec = coor_t[:2] - coor_o[:2]
       vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
       return vec, vec_mag
 
@@ -45,6 +45,11 @@ def move_by_vec(vec, vec_mag, loc):
             loc[0] += loc[4] * (vec[0] * 1.0 / vec_mag)
             loc[1] += loc[4] * (vec[1] * 1.0 / vec_mag)
             loc[2:4] = vec
+
+# get back to field
+def get_back(obj):
+      back, back_mag = get_vec(np.array([FIELD_LEN/2, FIELD_WID/2]), obj[:2])
+      move_by_vec(back, back_mag, obj)
 
 # a normal distribution array
 nd = np.random.normal(0, 15, 50)
@@ -106,11 +111,21 @@ class FutbolEnv(gym.Env):
             # who has the ball
             self.ball_owner = BallOwner.NOONE
 
+            # the scores
+            self.ai_score = 0
+            self.opp_score = 0
+
       
-      def out_of_field(self):
-            x = self.ball[0] < 0 or self.ball[0] > FIELD_LEN
-            y = self.ball[1] < 0 or self.ball[1] > FIELD_WID
+      def out(self, obj):
+            x = obj[0] < 0 or obj[0] > FIELD_LEN
+            y = obj[1] < 0 or obj[1] > FIELD_WID
             return x or y
+
+      
+      def score(self):
+            ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
+            opp_in = self.ball[0] >= 1000 and (self.ball[1] > GOAL_UPPER and self.ball[1] < GOAL_LOWER)
+            return ai_in or opp_in
 
       
       def fix(self, player):
@@ -157,16 +172,17 @@ class FutbolEnv(gym.Env):
             # kick or take the ball
             opp_act_first = random.random()
             if opp_act_first < 0.5:
+                  # first, if the opponent is out af the field, get back
+                  if self.out(self.opp):
+                        get_back(self.opp)
                   if b2o_mag < 2:
                         tackle_p = random.random()
                         if tackle_p < 0.5 and self.ball_owner != BallOwner.OPP:
                               # tackle for the ball
                               succ_p = random.random()
-                              if succ_p <0.3:
+                              if succ_p <0.3 or self.ball_owner == BallOwner.NOONE:
                                     self.ball = self.opp
                                     self.ball_owner = BallOwner.OPP
-                              else:
-                                    pass
                         else:
                               # shoot the ball
                               # blur the shooting direction a little
@@ -176,14 +192,12 @@ class FutbolEnv(gym.Env):
                               # now the ball belongs to no one
                               self.ball_owner = BallOwner.NOONE
                               # if the ball is out of the field, fix it
-                              if self.out_of_field():
+                              if self.out(self.ball):
                                     self.fix(BallOwner.OPP)
-                  else:
-                        pass
-            else:
-                  pass
+
+            # now, the agent acts first
             if action_type == Action.SHOOT:
-                  if self.ball_owner != BallOwner.AI:
+                  if b2a_mag > 2:
                         pass
                   else:
                         # blur the shooting direction a little
@@ -197,7 +211,7 @@ class FutbolEnv(gym.Env):
                         self.opp[4] = PLARYER_SPEED_WO_BALL
                         move_by_vec(b2o, b2o_mag, self.opp)
                         # if the ball is out of the field, fix it
-                        if self.out_of_field():
+                        if self.out(self.ball):
                               self.fix(BallOwner.AI)
 
             # if the ball is close enough to the agent, try taking it
@@ -221,6 +235,9 @@ class FutbolEnv(gym.Env):
                   self.ai[4] = 1.0 * random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
                   self.opp[4] = 1.0 * random.randint(PLARYER_SPEED_WO_BALL - 4, PLARYER_SPEED_WO_BALL + 4)
                   o2a, o2a_mag = get_vec(self.opp[:2], self.ai[:2])
+                  # if the agent is out, get back
+                  if self.out(self.ai):
+                        get_back(self.ai)
                   # if agent has the ball, agent run toward the goal, opp chase the 
                   # agent
                   if self.ball_owner == BallOwner.AI:
@@ -234,7 +251,7 @@ class FutbolEnv(gym.Env):
                         move_by_vec(o2a, o2a_mag, self.ai)
                   # if neither has the ball, run towards the ball
                   else:
-                        move_by_vec(self.ball[2:4], math.sqrt(self.ball[1]**2 + self.ball[2]**2), self.ball)
+                        move_by_vec(self.ball[2:4], math.sqrt(self.ball[2]**2 + self.ball[3]**2), self.ball)
                         move_by_vec(b2o, b2o_mag, self.opp)
                         move_by_vec(b2a, b2a_mag, self.ai)
 
@@ -255,6 +272,11 @@ class FutbolEnv(gym.Env):
             player_adv_mag = math.sqrt(player_adv[0]**2 + player_adv[1]**2)
             player_adv_mag /= math.sqrt(self.ai[0]**2 + self.ai[1]**2)
 
+            if self.out(self.ai):
+                  out_of_field = -3 * (ball_advance_mag + player_adv_mag)
+            else:
+                  out_of_field = 0
+
             if self.ball_owner == BallOwner.AI:
                   get_ball = 0.5 * (ball_advance_mag + player_adv_mag)
             else:
@@ -270,7 +292,7 @@ class FutbolEnv(gym.Env):
             else:
                   get_scored = 0
 
-            return ball_advance_mag + player_adv_mag + get_ball + score + get_scored
+            return ball_advance_mag + player_adv_mag + get_ball + score + get_scored + out_of_field
 
 
       # Execute one time step within the environment
@@ -279,6 +301,16 @@ class FutbolEnv(gym.Env):
             self._take_action(action)
             # calculate reward
             reward = self._get_reward(o_b, o_ai, o_p)
+            # if a ball is scored, reset the players and the ball
+            if self.score:
+                  if self.ball[0] <= 0:
+                        self.ai_score += 1
+                  else:
+                        self.opp_score += 1
+                  self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+                  self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
+                  self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
+                  self.ball_owner = BallOwner.NOONE
             # figure out whether the game is over
             if self.time == GAME_TIME:
                   done = True
@@ -290,6 +322,7 @@ class FutbolEnv(gym.Env):
             self.time += 1
             return obs, reward, done, {}
 
+
       # Reset the state of the environment to an initial state
       def reset(self):
             self.time = 0
@@ -297,6 +330,8 @@ class FutbolEnv(gym.Env):
             self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
             self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
             self.ball_owner = BallOwner.NOONE
+            self.ai_score = 0
+            self.opp_score = 0
             return self._next_observation()
 
 
