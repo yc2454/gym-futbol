@@ -10,6 +10,7 @@ from .action import Action
 from .ballowner import BallOwner
 import random
 from PIL import Image, ImageDraw
+import matplotlib.pyplot as plt
 
 # constants
 GOAL_UPPER = 296
@@ -337,5 +338,23 @@ class FutbolEnv(gym.Env):
 
       # Render the environment to the screen
       def render(self, mode='human', close=False):
-            raise NotImplementedError
+            
+            _, ax = plt.subplots()
+            ax.set_xlim(0, FIELD_LEN)
+            ax.set_ylim(0, FIELD_WID)
+
+            # ai
+            ai_x, ai_y, _, _, _ = self.ai
+            ax.plot(ai_x,ai_y, color = 'red', marker='o', markersize=12, label='ai')
+
+            # opp
+            opp_x, opp_y, _, _, _ = self.opp
+            ax.plot(opp_x, opp_y, color = 'blue', marker='o', markersize=12, label='opp')
+
+            # ball
+            ball_x, ball_y, _, _, _ = self.ball
+            ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
+
+            ax.legend()
+            plt.show()
             
