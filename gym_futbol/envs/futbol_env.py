@@ -13,10 +13,10 @@ from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
 
 # constants
-GOAL_UPPER = 296
-GOAL_LOWER = 304
-FIELD_LEN = 1000
-FIELD_WID = 600
+GOAL_UPPER = 29.6
+GOAL_LOWER = 30.4
+FIELD_LEN = 105
+FIELD_WID = 68
 BALL_SPEED = 20
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
@@ -328,8 +328,8 @@ class FutbolEnv(gym.Env):
       def reset(self):
             self.time = 0
             self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-            self.ai = np.array([FIELD_LEN/2 - 90, FIELD_WID/2, 0, 0, 0])
-            self.opp = np.array([FIELD_LEN/2 + 90, FIELD_WID/2, 0, 0, 0])
+            self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
+            self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
             self.ball_owner = BallOwner.NOONE
             self.ai_score = 0
             self.opp_score = 0
