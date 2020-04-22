@@ -12,7 +12,7 @@ def get_vec(coor_t, coor_o):
 
 class Easy_Agent():
 
-      def __init__(self, name, observations, agent_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 20):
+      def __init__(self, name, observations, agent_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 10):
 
             self.name = name
 

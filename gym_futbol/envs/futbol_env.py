@@ -143,10 +143,10 @@ class FutbolEnv(gym.Env):
             self.opp_score = 0
 
             # opp easy agent
-            self.opp_agent = Easy_Agent('opp', self.obs, self.opp_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 100)
+            self.opp_agent = Easy_Agent('opp', self.obs, self.opp_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 10)
 
             # ai easy agent
-            self.ai_agent = Easy_Agent('ai', self.obs, self.ai_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI), self.length, self.width, self.goal_size, shoot_range = 100)
+            self.ai_agent = Easy_Agent('ai', self.obs, self.ai_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI), self.length, self.width, self.goal_size, shoot_range = 10)
 
             return self.obs
 
