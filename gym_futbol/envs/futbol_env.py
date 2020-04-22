@@ -86,7 +86,7 @@ class Easy_Agent():
 
 class FutbolEnv(gym.Env):
 
-      def __init__(self, length = 1000, width = 600, goal_size = 100, game_time = 200, player_speed = 9, ball_speed = 20, Debug = False):
+      def __init__(self, length = 600, width = 300, goal_size = 100, game_time = 200, player_speed = 9, ball_speed = 20, Debug = False):
 
             self.length = length
             self.width = width
