@@ -327,8 +327,8 @@ class FutbolEnv(gym.Env):
       def reset(self):
             self.time = 0
             self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-            self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
-            self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
+            self.ai = np.array([FIELD_LEN/2 - 90, FIELD_WID/2, 0, 0, 0])
+            self.opp = np.array([FIELD_LEN/2 + 90, FIELD_WID/2, 0, 0, 0])
             self.ball_owner = BallOwner.NOONE
             self.ai_score = 0
             self.opp_score = 0
