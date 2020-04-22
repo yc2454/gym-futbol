@@ -108,6 +108,9 @@ class FutbolEnv(gym.Env):
                                                 dtype=np.float64)
             
             self.obs = self.reset()
+            # the scores
+            self.ai_score = 0
+            self.opp_score = 0
 
       
       # Reset the state of the environment to an initial state
@@ -137,10 +140,6 @@ class FutbolEnv(gym.Env):
 
             # who has the ball
             self.ball_owner = BallOwner.NOONE
-
-            # the scores
-            self.ai_score = 0
-            self.opp_score = 0
 
             # opp easy agent
             self.opp_agent = Easy_Agent('opp', self.obs, self.opp_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 10)
@@ -462,10 +461,7 @@ class FutbolEnv(gym.Env):
                         self.ai_score += 1
                   else:
                         self.opp_score += 1
-                  self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-                  self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
-                  self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
-                  self.ball_owner = BallOwner.NOONE
+                  self.reset()
             # figure out whether the game is over
             if self.time == GAME_TIME:
                   done = True
