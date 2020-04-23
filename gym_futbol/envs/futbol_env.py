@@ -166,7 +166,7 @@ class FutbolEnv(gym.Env):
       # Render the environment to the screen
       def render(self, mode='human', close=False):
 
-            fig, ax = plt.subplots()
+            _, ax = plt.subplots()
             ax.set_xlim(0, self.length)
             ax.set_ylim(0, self.width)
 
@@ -294,8 +294,6 @@ class FutbolEnv(gym.Env):
                               print(agent.name + " no ball: intercept")
 
                         agent_observation[2:5] = np.array([0,0,0])
-
-                        intercept_distance = 2
 
                         if ball_to_agent_magnitude > 2:
 
