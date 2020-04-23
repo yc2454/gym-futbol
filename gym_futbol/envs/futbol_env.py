@@ -12,6 +12,8 @@ import time
 import random
 from PIL import Image, ImageDraw
 
+import copy
+
 # constants
 FIELD_LEN = 105
 FIELD_WID = 68
