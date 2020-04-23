@@ -10,7 +10,7 @@ def get_vec(coor_t, coor_o):
       vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
       return vec, vec_mag
 
-cclass Easy_Agent():
+class Easy_Agent():
 
       def __init__(self, name, observations, agent_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 10):
 
