@@ -39,6 +39,11 @@ class Easy_Agent():
             self.goal_down = width / 2 - goal_size / 2
 
             self.shoot_range = shoot_range
+      
+      ### added for DQN agent to step
+      def _set_has_ball(self, has_ball):
+
+            self.has_ball = has_ball
 
       def get_action_type(self, observations, has_ball):
 
