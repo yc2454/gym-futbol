@@ -13,20 +13,27 @@ import random
 from PIL import Image, ImageDraw
 
 # constants
-GOAL_UPPER = 40
-GOAL_LOWER = 30
-GOAL_SIZE = GOAL_UPPER - GOAL_LOWER
 FIELD_LEN = 105
 FIELD_WID = 68
+
+### goal_size is the size of the goal
+GOAL_SIZE = 10
+GOAL_UPPER = FIELD_WID / 2 + GOAL_SIZE/2
+GOAL_LOWER = FIELD_WID / 2 - GOAL_SIZE/2
+
 BALL_SPEED = 20
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
-GAME_TIME = 600
+GAME_TIME = 60
 GOAL_REWARD = 2000
 BALL_ADV_REWARD_BASE = 7000
 PLAYER_ADV_REWARD_BASE = 2000
 OUT_OF_FIELD_PENALTY = -600
 BALL_CONTROL = 300
+
+# size of each time step 
+# step_size=1 means every step is 1s 
+STEP_SIZE = 0.3
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
@@ -106,17 +113,27 @@ class FutbolEnv(gym.Env):
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, ball_speed]]),
                                                 dtype=np.float64)
+
+
+            ### moved some parameter out of reset()
+            
+            self.ai_index = 0
+            self.opp_index = 1
+            self.ball_index = 2
             
             self.obs = self.reset()
-            # the scores
-            self.ai_score = 0
-            self.opp_score = 0
 
+
+             # opp easy agent
+            self.opp_agent = Easy_Agent('opp', self.obs, self.opp_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 10)
+
+            # ai easy agent
+            self.ai_agent = Easy_Agent('ai', self.obs, self.ai_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI), self.length, self.width, self.goal_size, shoot_range = 10)
+
+            
       
       # Reset the state of the environment to an initial state
       def reset(self):
-            # current time in the match, in seconds
-            self.time = 0
 
             # below are the coordinates and vectors of ball, agent and opponent, 
             # refer to the observation_space comment
@@ -130,91 +147,26 @@ class FutbolEnv(gym.Env):
 
             self.obs = np.concatenate((self.ai, self.opp, self.ball)).reshape((3, 5))
 
-            self.ai_index = 0
-            self.opp_index = 1
-            self.ball_index = 2
-
             self.ai = self.obs[self.ai_index]
             self.opp = self.obs[self.opp_index]
             self.ball = self.obs[self.ball_index]
 
             # who has the ball
             self.ball_owner = BallOwner.NOONE
+            self.last_ball_owner = BallOwner.NOONE
 
-            # opp easy agent
-            self.opp_agent = Easy_Agent('opp', self.obs, self.opp_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 10)
+            # current time in the match, in seconds
+            self.time = 0
 
-            # ai easy agent
-            self.ai_agent = Easy_Agent('ai', self.obs, self.ai_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI), self.length, self.width, self.goal_size, shoot_range = 10)
+            # the scores
+            self.ai_score = 0
+            self.opp_score = 0
 
             return self.obs
-
-      
-      def out(self, obj):
-            x = obj[0] < 0 or obj[0] > FIELD_LEN
-            y = obj[1] < 0 or obj[1] > FIELD_WID
-            return x or y
-
-      
-      def score(self):
-            ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
-            opp_in = self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
-            return ai_in or opp_in
-
-      #### need further modification
-      def fix(self, player):
-
-            if player == BallOwner.OPP:
-                  new_owner = BallOwner.AI
-            else:
-                  new_owner = BallOwner.OPP
-
-            # relocate the ball to where it went out
-            lock_in(self.ball[0], FIELD_LEN)
-            lock_in(self.ball[1], FIELD_WID)
-            self.ball_owner = new_owner
-
-            # move the other player and the ball together
-            self.ball[2:5] = np.array([0,0,0])
-            if new_owner == BallOwner.AI:
-                  self.ai = self.ball
-            else:
-                  self.opp = self.ball
            
 
       def _next_observation(self):
             return self.obs
-
-      def _get_reward(self, ball, ai, opp):
-
-            ball_adv = self.ball[0] - ball[0]
-
-            player_adv = self.ai[0] - ai[0] 
-
-            ball_adv_r = (ball_adv/FIELD_LEN) * BALL_ADV_REWARD_BASE
-            player_adv_r = (player_adv/FIELD_LEN) * PLAYER_ADV_REWARD_BASE
-
-            if self.out(self.ai):
-                  out_of_field = OUT_OF_FIELD_PENALTY
-            else:
-                  out_of_field = 0
-
-            if self.ball_owner == BallOwner.AI:
-                  get_ball = BALL_CONTROL
-            else:
-                  get_ball = 0
-
-            if self.score() and self.ball[0] <= 0:
-                  score = GOAL_REWARD
-            else:
-                  score = 0
-
-            if self.score() and self.ball[0] >= FIELD_LEN:
-                  get_scored = -GOAL_REWARD
-            else:
-                  get_scored = 0
-
-            return ball_adv_r + player_adv_r + get_ball + score + get_scored + out_of_field
 
 
       # Render the environment to the screen
@@ -225,15 +177,15 @@ class FutbolEnv(gym.Env):
             ax.set_ylim(0, self.width)
 
             # ai
-            ai_x, ai_y, _, _, _ = self.ai
+            ai_x, ai_y, _, _, _ = self.obs[self.ai_index]
             ax.plot(ai_x,ai_y, color = 'red', marker='o', markersize=12, label='ai')
 
             # opp
-            opp_x, opp_y, _, _, _ = self.opp
+            opp_x, opp_y, _, _, _ = self.obs[self.opp_index]
             ax.plot(opp_x, opp_y, color = 'blue', marker='o', markersize=12, label='opp')
 
             # ball
-            ball_x, ball_y, _, _, _ = self.ball
+            ball_x, ball_y, _, _, _ = self.obs[self.ball_index]
             ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
 
             ax.legend()
@@ -251,7 +203,7 @@ class FutbolEnv(gym.Env):
 
             action = Action(action_type)
 
-            agent_observation = agent.agent_observation
+            agent_observation = self.obs[agent.agent_index]
 
             ball_observation = self.obs[self.ball_index]
            
@@ -306,14 +258,21 @@ class FutbolEnv(gym.Env):
                         if self.Debug: 
                               print(agent.name + " with ball: shoot")
 
+                        ### changed, as screw_vec is not currently working
                         if agent.team == 'right': 
+                              # goal_to_ball, goal_to_ball_mag = get_vec(np.array([0, target_y]), ball_observation[:2])
+                              # ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag)
                               ball_observation[2:4], _ = get_vec(np.array([0, target_y]), ball_observation[:2])
 
                         else: 
+                              # goal_to_ball, goal_to_ball_mag = get_vec(np.array([self.length, target_y]), ball_observation[:2])
+                              # ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag)
                               ball_observation[2:4], _ = get_vec(np.array([self.length, target_y]), ball_observation[:2])
+
 
                         agent.has_ball = False
                         self.ball_owner = BallOwner.NOONE
+                        self.last_ball_owner = BallOwner(agent.agent_index)
                         agent_observation[2:5] = np.array([0,0,0])
 
                   else: 
@@ -345,9 +304,9 @@ class FutbolEnv(gym.Env):
 
                         agent_observation[2:5] = np.array([0,0,0])
 
-                        intercept_distance = 5
+                        intercept_distance = 2
 
-                        if ball_to_agent_magnitude > 5:
+                        if ball_to_agent_magnitude > 2:
 
                               if self.Debug:
                                     print(agent.name + " too far, intercept failed")
@@ -361,6 +320,7 @@ class FutbolEnv(gym.Env):
                                     ball_observation[2:5] = np.array([0, 0, 0])
                                     ball_observation[:2] = agent_observation[:2]
                                     self.ball_owner = BallOwner(agent.agent_index)
+                                    self.last_ball_owner = BallOwner(agent.agent_index)
 
                                     if self.Debug:
                                           print(agent.name + " lucky, intercept success")
@@ -400,18 +360,25 @@ class FutbolEnv(gym.Env):
 
             return agent_observation
 
-      def _agent_set_vector_observation(self, agent):
+      ### changed
+      # action_set=True means the action is given in the step function
+      # action_set=False means the action need to be deduced from agent
+      def _agent_set_vector_observation(self, agent, action_set = False, action_type = 0):
 
             if self.ball_owner == BallOwner(agent.agent_index): 
                   agent_has_ball = True
             else:
                   agent_has_ball = False
 
-            agent_action_type = agent.get_action_type(self.obs, agent_has_ball)
+            if not action_set:
+                  action_type = agent.get_action_type(self.obs, agent_has_ball)
+            else:
+                  agent._set_has_ball(agent_has_ball)
 
-            self.obs[agent.agent_index] = self._set_vector_observation(agent, agent_action_type)
+            self.obs[agent.agent_index] = self._set_vector_observation(agent, action_type)
 
       # move the [loc] according to [vec]
+      # notice the STEP_SIZE
       def _step_observation(self, observation):
 
             tx, ty = observation[2:4]
@@ -420,8 +387,40 @@ class FutbolEnv(gym.Env):
             if vec_mag == 0:
                   pass
             else:
-                  observation[0] += observation[4] * (tx * 1.0 / vec_mag)
-                  observation[1] += observation[4] * (ty * 1.0 / vec_mag)
+                  observation[0] += observation[4] * (tx * STEP_SIZE / vec_mag)
+                  observation[1] += observation[4] * (ty * STEP_SIZE / vec_mag)
+
+            
+      def out(self, obj):
+            x = obj[0] < 0 or obj[0] > FIELD_LEN
+            y = obj[1] < 0 or obj[1] > FIELD_WID
+            return x or y
+
+      
+      def score(self):
+            ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
+            opp_in = self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
+            return ai_in or opp_in
+
+      #### need further modification
+      def fix(self, player):
+
+            if player == BallOwner.OPP:
+                  new_owner = BallOwner.AI
+            else:
+                  new_owner = BallOwner.OPP
+
+            # relocate the ball to where it went out
+            self.ball[0] = lock_in(self.ball[0], FIELD_LEN)
+            self.ball[1] = lock_in(self.ball[1], FIELD_WID)
+            self.ball_owner = new_owner
+
+            # move the other player and the ball together
+            self.ball[2:5] = np.array([0,0,0])
+            if new_owner == BallOwner.AI:
+                  self.obs[self.ai_index] = self.ball
+            else:
+                  self.obs[self.opp_index] = self.ball
 
 
       def _step_vector_observations(self, observations):
@@ -444,24 +443,52 @@ class FutbolEnv(gym.Env):
             y = self.ball[1] < 0 or self.ball[1] > self.width
             return x or y
                   
-      def step(self, action_type):
+      def step(self, ai_action_type):
 
-            o_b, o_ai, o_p = self.ball, self.ai, self.opp
+            o_b = copy.copy(self.ball)
+            o_ai = copy.copy(self.ai)
+            o_p = copy.copy(self.opp)
+
+            self._agent_set_vector_observation(self.opp_agent)
+
+            self._agent_set_vector_observation(self.ai_agent, action_set = True, action_type = ai_action_type)
+
+            self._step_vector_observations(self.obs)
 
             # calculate reward
             reward = self._get_reward(o_b, o_ai, o_p)
 
-            self._agent_set_vector_observation(self.opp_agent)
-            self._agent_set_vector_observation(self.ai_agent)
-
-            self._step_vector_observations(self.obs)
-
             if self.score():
                   if self.ball[0] <= 0:
-                        self.ai_score += 1
-                  else:
                         self.opp_score += 1
-                  self.reset()
+                  else:
+                        self.ai_score += 1
+
+                  if self.Debug: 
+                        print("Score!!!")
+                        print("ai : opp = " + str(self.ai_score) + " : " + str(self.opp_score))
+
+                  ### changed from simple reset()
+                  self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+                  self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
+                  self.opp = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
+                  self.obs = np.concatenate((self.ai, self.opp, self.ball)).reshape((3, 5))
+                  self.ball_owner = BallOwner.NOONE
+                  self.last_ball_owner = BallOwner.NOONE
+
+                  self.ai = self.obs[self.ai_index]
+                  self.opp = self.obs[self.opp_index]
+                  self.ball = self.obs[self.ball_index]
+
+            
+            if self.out(self.ball):
+
+                  self.fix(self.last_ball_owner)
+
+                  if self.Debug: 
+                        print("fix out of box ball")
+
+
             # figure out whether the game is over
             if self.time == GAME_TIME:
                   done = True
@@ -471,3 +498,39 @@ class FutbolEnv(gym.Env):
             # one second passes in the game
             self.time += 1
             return self.obs, reward, done, {}
+
+    
+      def _get_reward(self, ball, ai, opp):
+
+            ball_adv = self.ball[0] - ball[0]
+
+            player_adv = self.ai[0] - ai[0] 
+
+            ball_adv_r = (ball_adv/FIELD_LEN) * BALL_ADV_REWARD_BASE
+            player_adv_r = (player_adv/FIELD_LEN) * PLAYER_ADV_REWARD_BASE
+
+            if self.out(self.ai):
+                  out_of_field = OUT_OF_FIELD_PENALTY
+            else:
+                  out_of_field = 0
+
+            if self.ball_owner == BallOwner.AI:
+                  get_ball = BALL_CONTROL
+            else:
+                  get_ball = 0
+
+            if self.score() and self.ball[0] >= FIELD_LEN:
+                  score = GOAL_REWARD
+                  if self.Debug:
+                        print("scored reward")
+            else:
+                  score = 0
+
+            if self.score() and self.ball[0] <= 0:
+                  get_scored = -GOAL_REWARD
+                  if self.Debug:
+                        print("get scored reward")
+            else:
+                  get_scored = 0
+
+            return ball_adv_r + player_adv_r + get_ball + score + get_scored + out_of_field

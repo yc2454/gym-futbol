@@ -10,7 +10,7 @@ def get_vec(coor_t, coor_o):
       vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
       return vec, vec_mag
 
-class Easy_Agent():
+cclass Easy_Agent():
 
       def __init__(self, name, observations, agent_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 10):
 
@@ -39,6 +39,11 @@ class Easy_Agent():
             self.goal_down = width / 2 - goal_size / 2
 
             self.shoot_range = shoot_range
+      
+      ### added for DQN agent to step
+      def _set_has_ball(self, has_ball):
+
+            self.has_ball = has_ball
 
       def get_action_type(self, observations, has_ball):
 
@@ -68,7 +73,7 @@ class Easy_Agent():
                         # run
                         action_type = 0
             else:
-                  if ball_to_agent_magnitude <= 5: 
+                  if ball_to_agent_magnitude <= 2: 
                         # intercept
                         action_type = 1
                   else: 
