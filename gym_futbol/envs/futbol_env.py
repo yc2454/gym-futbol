@@ -67,21 +67,24 @@ def get_back(obj):
       back, back_mag = get_vec(np.array([FIELD_LEN/2, FIELD_WID/2]), obj[:2])
       move_by_vec(back, back_mag, obj)
 
-# a normal distribution array
-nd = np.random.normal(0, 15, 50)
 
 # twist the direction of vector [vec] a little
 # the twist follows normal distribution
-def screw_vec(vec, vec_mag):
-      i = vec[0] * 1.0 / vec_mag
-      j = vec[1] * 1.0 / vec_mag
+def screw_vec(vec, vec_mag, accuracy=15):
+      # a Gaussian distribution with std=accuracy
+      nd = np.random.normal(0, accuracy, 10)
+      # swing the vector by an angle randomly chosen from [nd]
+      cos = vec[0] * 1.0 / vec_mag
+      sin = vec[1] * 1.0 / vec_mag
       seed = random.randint(0, 49)
-      twist_angle = (nd[seed] / 180) * math.pi
-      twist_sin = math.sin(twist_angle)
-      twist_cos = math.cos(twist_angle)
-      twisted_i = (j * twist_cos) - (i * twist_sin)
-      twisted_j = (i * twist_cos) + (j * twist_sin)
-      twisted_vec = np.array([twisted_i * vec_mag, twisted_j * vec_mag])
+      swing_angle = (nd[seed] / 180) * math.pi
+      swing_sin = math.sin(swing_angle)
+      swing_cos = math.cos(swing_angle)
+      # sin(a+b) = sin(a)cos(b) + cos(a)sin(b)
+      # cos(a+b) = cos(a)cos(b) - sin(a)sin(b)
+      twisted_cos = (cos * swing_cos) - (sin * swing_sin)
+      twisted_sin = (sin * swing_cos) + (cos * swing_sin)
+      twisted_vec = np.array([twisted_cos * vec_mag, twisted_sin * vec_mag])
       return twisted_vec
 
 
@@ -89,6 +92,7 @@ class FutbolEnv(gym.Env):
 
       def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, ball_speed = BALL_SPEED, Debug = False):
 
+            # constants 
             self.length = length
             self.width = width
             self.goal_size = goal_size
@@ -118,7 +122,6 @@ class FutbolEnv(gym.Env):
 
 
             ### moved some parameter out of reset()
-            
             self.ai_index = 0
             self.opp_index = 1
             self.ball_index = 2
@@ -211,7 +214,7 @@ class FutbolEnv(gym.Env):
 
             ball_observation = self.obs[self.ball_index]
            
-            target_padding = 1
+            target_padding = 1.5
 
             target_y = random.randint(self.goal_down + target_padding, self.goal_up - target_padding)            
             
@@ -235,7 +238,7 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 2, self.player_speed + 2)
+                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
                         
                         if self.Debug: 
                               print(agent.name + " with ball: run to goal")
@@ -263,16 +266,16 @@ class FutbolEnv(gym.Env):
                               print(agent.name + " with ball: shoot")
 
                         ### changed, as screw_vec is not currently working
+                        ### fixed
                         if agent.team == 'right': 
-                              # goal_to_ball, goal_to_ball_mag = get_vec(np.array([0, target_y]), ball_observation[:2])
-                              # ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag)
-                              ball_observation[2:4], _ = get_vec(np.array([0, target_y]), ball_observation[:2])
+                              goal_to_ball, goal_to_ball_mag = get_vec(np.array([0, target_y]), ball_observation[:2])
+                              ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag)
+                              # ball_observation[2:4], _ = get_vec(np.array([0, target_y]), ball_observation[:2])
 
                         else: 
-                              # goal_to_ball, goal_to_ball_mag = get_vec(np.array([self.length, target_y]), ball_observation[:2])
-                              # ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag)
-                              ball_observation[2:4], _ = get_vec(np.array([self.length, target_y]), ball_observation[:2])
-
+                              goal_to_ball, goal_to_ball_mag = get_vec(np.array([self.length, target_y]), ball_observation[:2])
+                              ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag)
+                              # ball_observation[2:4], _ = get_vec(np.array([self.length, target_y]), ball_observation[:2])
 
                         agent.has_ball = False
                         self.ball_owner = BallOwner.NOONE
@@ -283,6 +286,7 @@ class FutbolEnv(gym.Env):
 
                         print('Unrecognized action %d' % action_type)
 
+            # when the agent doesn't have ball
             else: 
 
                   ball_to_agent, ball_to_agent_magnitude = get_vec(ball_observation[:2], agent_observation[:2])
@@ -308,9 +312,9 @@ class FutbolEnv(gym.Env):
 
                         agent_observation[2:5] = np.array([0,0,0])
 
-                        intercept_distance = 2
+                        intercept_distance = 1
 
-                        if ball_to_agent_magnitude > 2:
+                        if ball_to_agent_magnitude > intercept_distance:
 
                               if self.Debug:
                                     print(agent.name + " too far, intercept failed")
@@ -361,8 +365,8 @@ class FutbolEnv(gym.Env):
                   else: 
                         print('Unrecognized action %d' % action_type)
                         
-
             return agent_observation
+
 
       ### changed
       # action_set=True means the action is given in the step function
@@ -381,9 +385,10 @@ class FutbolEnv(gym.Env):
 
             self.obs[agent.agent_index] = self._set_vector_observation(agent, action_type)
 
+
       # move the [loc] according to [vec]
       # notice the STEP_SIZE
-      def _step_observation(self, observation):
+      def _step_by_observation(self, observation):
 
             tx, ty = observation[2:4]
             vec_mag = math.sqrt(tx**2 + ty**2)
@@ -405,6 +410,7 @@ class FutbolEnv(gym.Env):
             ai_in = self.ball[0] <= 0 and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
             opp_in = self.ball[0] >= FIELD_LEN and (self.ball[1] > GOAL_LOWER and self.ball[1] < GOAL_UPPER)
             return ai_in or opp_in
+
 
       #### need further modification
       def fix(self, player):
@@ -434,8 +440,7 @@ class FutbolEnv(gym.Env):
                 print(self.obs)
 
             for observation in observations: 
-
-                  self._step_observation(observation)
+                  self._step_by_observation(observation)
 
             if self.Debug: 
                 print("vector after step:")
