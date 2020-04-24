@@ -59,7 +59,7 @@ class Easy_Agent():
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
 
-            ball_to_agent, ball_to_agent_magnitude = get_vec(self.ball[:2], self.agent_observation[:2])
+            _, ball_to_agent_magnitude = get_vec(self.ball[:2], self.agent_observation[:2])
 
             action_type = 0
 
