@@ -239,13 +239,14 @@ class FutbolEnv(gym.Env):
 
 
       def defence_near(self, agent):
+            #### changed agent.observation to agent.agent_observation
             if agent.team == 'left':
-                  _, o1_dis = get_vec(self.opp_1[:2], agent.observation[:2])
-                  _, o2_dis = get_vec(self.opp_2[:2], agent.observation[:2])
+                  _, o1_dis = get_vec(self.opp_1[:2], agent.agent_observation[:2])
+                  _, o2_dis = get_vec(self.opp_2[:2], agent.agent_observation[:2])
                   return bigger_than(o1_dis, o2_dis, 2)
             else:
-                  _, a1_dis = get_vec(self.ai_1[:2], agent.observation[:2])
-                  _, a2_dis = get_vec(self.ai_2[:2], agent.observation[:2])
+                  _, a1_dis = get_vec(self.ai_1[:2], agent.agent_observation[:2])
+                  _, a2_dis = get_vec(self.ai_2[:2], agent.agent_observation[:2])
                   return bigger_than(a1_dis, a2_dis, 2)
 
 
