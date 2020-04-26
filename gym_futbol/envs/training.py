@@ -13,35 +13,63 @@ from keras.optimizers import Adam
 
 import random
 
-def train_agent(EPISODES=100):
-    
-      env = gym.make('Futbol-v0')
-      state_size_a, state_size_b = env.observation_space.shape
-      state_size = state_size_a * state_size_b
-      action_size = env.action_space.n
+def train_agents(agent_class=DQNAgent, EPISODES=100, dueling_types = []):
 
-      agent = DQNAgent(state_size, action_size)
+    env = gym.make('Futbol-v0')
+    state_size = env.observation_space.shape[0] #TODO: dk what it is
+    action_size = env.action_space.n #TODO: dk what the n here is
 
-      state = env.reset()
-      state = np.reshape(state, [1, state_size])
+    agent_dic_list = []
+    i = 0
+    i_dueling = 0
 
-      batch_size = 32
 
-      for _ in range(EPISODES):
+    temp_agent = DQNAgent(state_size, action_size)
 
-          done = False
+    temp_dict = dict(model=temp_agent, name=temp_agent.name, score=[], raw_model=copy.deepcopy(temp_agent))
 
-          while not done: 
-            
-              action = agent.act(state)
-              next_state, reward, done, _ = env.step(action)
-              env.render()
-              next_state = np.reshape(next_state, [1, state_size])
-              agent.memorize(state, action, reward, next_state, done)
-              state = next_state
+    agent_dic_list.append(temp_dict)
 
-              if len(agent.memory) > batch_size:
+    done = False
+    batch_size = 32
+
+    e_arr = []
+
+    for e in range(EPISODES):
+
+        for agent_dic in agent_dic_list:
+
+            agent = agent_dic['model']
+
+            state = env.reset()
+            state = np.reshape(state, [1, state_size])
+
+            for time in range(500):
+                action = agent.act(state)
+                next_state, reward, done, _ = env.step(action)
+                reward = reward if not done else -10
+                next_state = np.reshape(next_state, [1, state_size])
+                agent.memorize(state, action, reward, next_state, done)
+                state = next_state
+                if done:
+                    agent_dic['score'].append(time)
+                    break
+
+                if len(agent.memory) > batch_size:
                     loss = agent.replay(batch_size)
+
+        e_arr.append(e)
+
+        plt.clf()
+
+        for agent_dic in agent_dic_list:
+            plt.plot(e_arr, agent_dic['score'], label = agent_dic['name'])
+            
+        plt.legend()
+        display.display(plt.gcf())
+        display.clear_output(wait=True)
+
+    return agent_dic_list
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
@@ -95,7 +123,7 @@ class DQNAgent:
             self.epsilon *= self.epsilon_decay
         return loss
 
-train_agent(EPISODES=1)
+agent_list = train_agent(EPISODES=1)
 
 def eval_agent(agent, episodes = 10):
     

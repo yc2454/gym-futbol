@@ -1,7 +1,7 @@
 
 import math
-from ballowner import BallOwner
-from action import Action
+from .ballowner import BallOwner
+from .action import Action
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude

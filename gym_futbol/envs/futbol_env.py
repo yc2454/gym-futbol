@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import gym
 from gym import error, spaces, utils
 
-from ballowner import BallOwner
-from action import Action
-from easy_agent import Easy_Agent
+from .ballowner import BallOwner
+from .action import Action
+from .easy_agent import Easy_Agent
 
 import numpy as np
 import math
