@@ -447,6 +447,17 @@ class FutbolEnv(gym.Env):
                               print(agent.name + " no ball: shoot and stop")
 
                         agent_observation[2:5] = np.array([0, 0, 0])
+
+                  # no ball and assist, stop agent
+                      # agent_vec = x, y, 0, 0, 0
+                      # ball_vec = x', y', tx', ty', m' (no change)
+                      # ball owener not change
+                  elif action == Action.assist:
+
+                        if self.Debug: 
+                              print(agent.name + " no ball: assist and stop")
+
+                        agent_observation[2:5] = np.array([0, 0, 0])
                   
                   else: 
                         print('Unrecognized action %d' % action_type)
