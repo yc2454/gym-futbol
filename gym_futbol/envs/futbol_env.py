@@ -141,8 +141,10 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 3),
+            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 5),
                                                 high=np.array([[length, width, length, width, player_speed],
+                                                      [length, width, length, width, player_speed],
+                                                      [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, ball_speed]]),
                                                 dtype=np.float64)
@@ -235,7 +237,7 @@ class FutbolEnv(gym.Env):
             ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
 
             ax.legend()
-            plt.show()
+#            plt.show()
 
 
       def defence_near(self, agent):
@@ -546,7 +548,9 @@ class FutbolEnv(gym.Env):
 
             self._agent_set_vector_observation(self.opp_1_agent)
 
-            self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type)
+            self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
+            
+            self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
 
             self._step_vector_observations(self.obs)
 
@@ -565,14 +569,18 @@ class FutbolEnv(gym.Env):
 
                   ### changed from simple reset()
                   self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
-                  self.ai = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
-                  self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2, 0, 0, 0])
-                  self.obs = np.concatenate((self.ai, self.opp_1, self.ball)).reshape((3, 5))
+                  self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0])
+                  self.ai_2 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 - 5, 0, 0, 0])
+                  self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
+                  self.opp_2 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 - 5, 0, 0, 0])
+                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball)).reshape((5, 5))
                   self.ball_owner = BallOwner.NOONE
                   self.last_ball_owner = BallOwner.NOONE
 
-                  self.ai = self.obs[self.ai_1_index]
+                  self.ai_1 = self.obs[self.ai_1_index]
+                  self.ai_2 = self.obs[self.ai_2_index]
                   self.opp_1 = self.obs[self.opp_1_index]
+                  self.opp_2 = self.obs[self.opp_2_index]
                   self.ball = self.obs[self.ball_index]
 
             
@@ -605,7 +613,7 @@ class FutbolEnv(gym.Env):
             defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
             defence_r = defence + DEFENCE_REWARD_BASE
 
-            if self.out(self.ai):
+            if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
             else:
                   out_of_field = 0
