@@ -348,8 +348,12 @@ class FutbolEnv(gym.Env):
                         mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
 
                         # anticipate the teammate's location based on the current movement
-                        mate_next_pos_x = mate[0] + (mate[2]/mate_vec_mag)*mate[4]
-                        mate_next_pos_y = mate[1] + (mate[3]/mate_vec_mag)*mate[4]
+                        if mate_vec_mag == 0:
+                              mate_next_pos_x = mate[0]
+                              mate_next_pos_y = mate[1]
+                        else:
+                              mate_next_pos_x = mate[0] + (mate[2]/mate_vec_mag)*mate[4]
+                              mate_next_pos_y = mate[1] + (mate[3]/mate_vec_mag)*mate[4]
 
                         mate_to_ball, _ = get_vec(np.array([mate_next_pos_x, mate_next_pos_y]), ball_observation[:2])
                         ball_observation[2:4] = mate_to_ball
