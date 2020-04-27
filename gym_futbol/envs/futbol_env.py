@@ -349,7 +349,7 @@ class FutbolEnv(gym.Env):
                         mate_next_pos_x = mate[0] + (mate[2]/mate_vec_mag)*mate[4]
                         mate_next_pos_y = mate[1] + (mate[3]/mate_vec_mag)*mate[4]
 
-                        mate_to_ball, _ = get_vec(np.array(mate_next_pos_x, mate_next_pos_y), ball_observation[:2])
+                        mate_to_ball, _ = get_vec(np.array([mate_next_pos_x, mate_next_pos_y]), ball_observation[:2])
                         ball_observation[2:4] = mate_to_ball
 
                         agent.has_ball = False
