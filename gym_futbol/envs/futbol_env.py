@@ -30,7 +30,7 @@ PRESSURE_RANGE = 2
 BALL_SPEED = 20
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
-GAME_TIME = 5400
+GAME_TIME = 600
 GOAL_REWARD = 2000
 BALL_ADV_REWARD_BASE = 7000
 PLAYER_ADV_REWARD_BASE = 1500
@@ -558,6 +558,8 @@ class FutbolEnv(gym.Env):
             o_p_2 = copy.copy(self.opp_2)
 
             self._agent_set_vector_observation(self.opp_1_agent)
+
+            self._agent_set_vector_observation(self.opp_2_agent)
 
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
             
