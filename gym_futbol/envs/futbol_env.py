@@ -27,10 +27,11 @@ GOAL_LOWER = FIELD_WID / 2 - GOAL_SIZE/2
 # attacker
 PRESSURE_RANGE = 2
 
-BALL_SPEED = 20
+SHOOT_SPEED = 20
+PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
-GAME_TIME = 600
+GAME_TIME = 12
 GOAL_REWARD = 2000
 BALL_ADV_REWARD_BASE = 7000
 PLAYER_ADV_REWARD_BASE = 1500
@@ -40,7 +41,7 @@ DEFENCE_REWARD_BASE = 800
 
 # size of each time step 
 # step_size=1 means every step is 1s 
-STEP_SIZE = 0.3
+STEP_SIZE = 0.1
 
 # missing from target value of shooting, represented by the 
 # standard deviation of shooting angle
@@ -108,7 +109,7 @@ def screw_vec(vec, vec_mag, accuracy=NORMAL_MISS):
 
 class FutbolEnv(gym.Env):
 
-      def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, ball_speed = BALL_SPEED, Debug = False, pressure_range = PRESSURE_RANGE):
+      def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE):
 
             # constants 
             self.length = length
@@ -118,7 +119,7 @@ class FutbolEnv(gym.Env):
             self.goal_down = width / 2 - goal_size / 2
             self.game_time = game_time
             self.player_speed = player_speed
-            self.ball_speed = ball_speed
+            self.shoot_speed = shoot_speed
 
             self.Debug = Debug
 
@@ -137,7 +138,7 @@ class FutbolEnv(gym.Env):
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
-                                                      [length, width, length, width, ball_speed]]),
+                                                      [length, width, length, width, shoot_speed]]),
                                                 dtype=np.float64)
 
 
@@ -307,7 +308,7 @@ class FutbolEnv(gym.Env):
 
                         accuracy_under_defence = NORMAL_MISS + self.defence_near(agent) * UNDER_DEFENCE_MISS 
 
-                        ball_observation[4] = random.randint(self.ball_speed - 16, self.ball_speed) * 1.0
+                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed) * 1.0
 
                         if self.Debug: 
                               print(agent.name + " with ball: shoot")
@@ -327,24 +328,29 @@ class FutbolEnv(gym.Env):
 
                   elif action == Action.assist:
 
-                        ball_observation[4] = random.randint(self.ball_speed - 16, self.ball_speed) * 1.0
-
-                        if agent.team == 'right': 
-                              goal_to_agent, goal_to_ball_mag = get_vec(np.array([0, target_y]), ball_observation[:2])
-
-                        else: 
-                              goal_to_ball, goal_to_ball_mag = get_vec(np.array([self.length, target_y]), ball_observation[:2])
+                        ball_observation[4] = random.randint(PASS_SPEED - 5, PASS_SPEED) * 1.0
 
                         if self.Debug: 
                               print(agent.name + " with ball: pass")
 
-                        if agent.name == 'opp_1': 
-                              mate_to_ball, _ = get_vec(self.opp_2[:2], ball_observation[:2])
-                              ball_observation[2:4] = mate_to_ball
+                        # figure out who the teammate is
+                        if agent.name == 'opp_1':
+                              mate = self.opp_2
+                        elif agent.name == 'opp_2':
+                              mate = self.opp_1
+                        elif agent.name == 'ai_1':
+                              mate = self.ai_2
+                        else:
+                              mate = self.ai_1
+            
+                        mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
 
-                        elif agent.name == 'opp_2': 
-                              mate_to_ball, _ = get_vec(self.opp_2[:2], ball_observation[:2])
-                              ball_observation[2:4] = mate_to_ball
+                        # anticipate the teammate's location based on the current movement
+                        mate_next_pos_x = mate[0] + (mate[2]/mate_vec_mag)*mate[4]
+                        mate_next_pos_y = mate[1] + (mate[3]/mate_vec_mag)*mate[4]
+
+                        mate_to_ball, _ = get_vec(np.array(mate_next_pos_x, mate_next_pos_y), ball_observation[:2])
+                        ball_observation[2:4] = mate_to_ball
 
                         agent.has_ball = False
                         self.last_ball_owner = copy.copy(self.ball_owner)
@@ -601,7 +607,7 @@ class FutbolEnv(gym.Env):
                   done = False
             
             # one second passes in the game
-            self.time += 1
+            self.time += STEP_SIZE
             return self.obs, reward, done, {}
 
     
