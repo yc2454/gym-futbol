@@ -213,13 +213,15 @@ class FutbolEnv(gym.Env):
             ax.set_xlim(0, self.length)
             ax.set_ylim(0, self.width)
 
+            print(self.ball_owner)
+
             # ai
             ai_1_x, ai_1_y, _, _, _ = self.obs[self.ai_1_index]
             ai_2_x, ai_2_y, _, _, _ = self.obs[self.ai_2_index]
             ax.plot(ai_1_x,ai_1_y, color = 'red', marker='o', markersize=12, label='ai')
             ax.plot(ai_2_x,ai_2_y, color = 'red', marker='o', markersize=12, label='ai')
 
-            # opp_1
+            # opp
             opp_1_x, opp_1_y, _, _, _ = self.obs[self.opp_1_index]
             opp_2_x, opp_2_y, _, _, _ = self.obs[self.opp_2_index]
             ax.plot(opp_1_x, opp_1_y, color = 'blue', marker='o', markersize=12, label='opp')
