@@ -614,8 +614,8 @@ class FutbolEnv(gym.Env):
             ball_adv_r = (ball_adv/FIELD_LEN) * BALL_ADV_REWARD_BASE
             player_adv_r = (player_adv/FIELD_LEN) * PLAYER_ADV_REWARD_BASE
 
-            defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
-            defence_r = defence + DEFENCE_REWARD_BASE
+            # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
+            # defence_r = defence * DEFENCE_REWARD_BASE
 
             if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
@@ -642,4 +642,4 @@ class FutbolEnv(gym.Env):
                   get_scored = 0
 
 
-            return ball_adv_r + player_adv_r + get_ball + score + get_scored + out_of_field + defence_r
+            return ball_adv_r + player_adv_r + get_ball + score + get_scored + out_of_field
