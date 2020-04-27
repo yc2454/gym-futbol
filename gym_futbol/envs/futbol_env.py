@@ -105,15 +105,6 @@ def screw_vec(vec, vec_mag, accuracy=NORMAL_MISS):
       twisted_vec = np.array([twisted_cos * vec_mag, twisted_sin * vec_mag])
       return twisted_vec
 
-# tell which team does the agent with index [i] belong
-def owner_from_index(i):
-      if i == 0 or i == 1:
-            return BallOwner.AI
-      elif i == 2 or i == 3:
-            return BallOwner.OPP
-      else:
-            print("unavailable")
-
 
 class FutbolEnv(gym.Env):
 
@@ -163,12 +154,12 @@ class FutbolEnv(gym.Env):
             self.time = 0
 
              # opp easy agent 1
-            self.opp_1_agent = Easy_Agent('opp_1', self.obs, self.opp_1_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.opp_2_agent = Easy_Agent('opp_2', self.obs, self.opp_2_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.opp_1_agent = Easy_Agent('opp_1', self.obs, self.opp_1_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.opp_2_agent = Easy_Agent('opp_2', self.obs, self.opp_2_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
 
             # ai easy agent
-            self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.ai_2_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_2_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
             
             
       # Reset the state of the environment to an initial state
@@ -330,8 +321,8 @@ class FutbolEnv(gym.Env):
                               ball_observation[2:4] = screw_vec(goal_to_ball, goal_to_ball_mag, accuracy_under_defence)
 
                         agent.has_ball = False
+                        self.last_ball_owner = copy.copy(self.ball_owner)
                         self.ball_owner = BallOwner.NOONE
-                        self.last_ball_owner = owner_from_index(agent.agent_index)
                         agent_observation[2:5] = np.array([0,0,0])
 
                   elif action == Action.assist:
@@ -356,8 +347,8 @@ class FutbolEnv(gym.Env):
                               ball_observation[2:4] = mate_to_ball
 
                         agent.has_ball = False
+                        self.last_ball_owner = copy.copy(self.ball_owner)
                         self.ball_owner = BallOwner.NOONE
-                        self.last_ball_owner = owner_from_index(agent.agent_index)
                         agent_observation[2:5] = np.array([0,0,0])
 
                   else: 
@@ -410,7 +401,7 @@ class FutbolEnv(gym.Env):
                                     ball_observation[2:5] = np.array([0, 0, 0])
                                     ball_observation[:2] = agent_observation[:2]
                                     self.last_ball_owner = copy.copy(self.ball_owner)
-                                    self.ball_owner = owner_from_index(agent.agent_index)
+                                    self.ball_owner = BallOwner(agent.agent_index)
                                     
                                     if self.Debug:
                                           print(agent.name + " lucky, intercept success")
@@ -432,7 +423,7 @@ class FutbolEnv(gym.Env):
                         if self.Debug: 
                               print(agent.name + " no ball: run to ball")
 
-                        if self.ball_owner != owner_from_index(agent.agent_index):
+                        if self.ball_owner != BallOwner(agent.agent_index):
                               agent_observation[2:4] = ball_to_agent
                         else:
                               agent_observation[2:4] = goal_to_agent
@@ -512,10 +503,10 @@ class FutbolEnv(gym.Env):
       #### need further modification
       def fix(self, player):
 
-            if player == BallOwner.OPP:
-                  new_owner = BallOwner.AI
+            if player == BallOwner.OPP_1 or player == BallOwner.OPP_2:
+                  new_owner = BallOwner.AI_1
             else:
-                  new_owner = BallOwner.OPP
+                  new_owner = BallOwner.OPP_1
 
             # relocate the ball to where it went out
             self.ball[0] = lock_in(self.ball[0], FIELD_LEN)
@@ -524,7 +515,7 @@ class FutbolEnv(gym.Env):
 
             # move the other player and the ball together
             self.ball[2:5] = np.array([0,0,0])
-            if new_owner == BallOwner.AI:
+            if new_owner == BallOwner.AI_1:
                   self.obs[self.ai_1_index] = copy.copy(self.ball)
             else:
                   self.obs[self.opp_1_index] = copy.copy(self.ball)
@@ -631,7 +622,7 @@ class FutbolEnv(gym.Env):
             else:
                   out_of_field = 0
 
-            if self.ball_owner == BallOwner.AI:
+            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
                   get_ball = BALL_CONTROL
             else:
                   get_ball = 0
