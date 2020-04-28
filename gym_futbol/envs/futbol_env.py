@@ -160,7 +160,7 @@ class FutbolEnv(gym.Env):
 
             # ai easy agent
             self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_1), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.ai_2_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_2_agent = Easy_Agent('ai_2', self.obs, self.ai_2_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
             
             
       # Reset the state of the environment to an initial state
