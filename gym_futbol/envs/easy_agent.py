@@ -1,4 +1,3 @@
-
 import math
 from ballowner import BallOwner
 from action import Action
@@ -12,12 +11,13 @@ def get_vec(coor_t, coor_o):
 
 class Easy_Agent():
 
-      def __init__(self, name, observations, agent_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 10):
+      def __init__(self, name, observations, agent_index, mate_index, ball_index, team, has_ball, length, width, goal_size, shoot_range = 10):
 
             self.name = name
 
             self.observations = observations
             self.agent_index = agent_index
+            self.mate_index = mate_index
             self.ball_index = ball_index
 
             self.team = team 
@@ -30,6 +30,7 @@ class Easy_Agent():
                   self.shoot_x = self.target_x - shoot_range
 
             self.agent_observation = observations[agent_index]
+            self.mate_observation = observations[self.mate_index]
             self.ball = observations[ball_index]
             self.has_ball = has_ball
 
@@ -39,10 +40,16 @@ class Easy_Agent():
             self.goal_down = width / 2 - goal_size / 2
 
             self.shoot_range = shoot_range
+      
+      ### added for DQN agent to step
+      def _set_has_ball(self, has_ball):
 
-      def get_action_type(self, observations, has_ball):
+            self.has_ball = has_ball
+
+      def get_action_type(self, observations, has_ball, team_has_ball):
 
             self.agent_observation = observations[self.agent_index]
+            self.mate_observation = observations[self.mate_index]
             self.ball = observations[self.ball_index]
             self.has_ball = has_ball
 
@@ -54,7 +61,8 @@ class Easy_Agent():
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
 
-            ball_to_agent, ball_to_agent_magnitude = get_vec(self.ball[:2], self.agent_observation[:2])
+            _, ball_to_agent_magnitude = get_vec(self.ball[:2], self.agent_observation[:2])
+            _, mate_to_agent_magnitude = get_vec(self.mate_observation[:2], self.agent_observation[:2])
 
             action_type = 0
 
@@ -63,15 +71,22 @@ class Easy_Agent():
                   if (self.team == 'right' and self.agent_observation[0] <= self.shoot_x) or (self.team != 'right' and self.agent_observation[0] >= self.shoot_x): 
                         # shoot
                         action_type = 2
-                        # print('agent shoot')
+
+                  elif (self.mate_observation[0] < self.agent_observation[0] 
+                        or self.mate_observation[1] < self.agent_observation[1] - 7 
+                        or self.mate_observation[1] > self.agent_observation[1] + 7) and random.random() > 0.7 and mate_to_agent_magnitude > 12:
+                        # assist
+                        action_type = 3
+
                   else:
                         # run
                         action_type = 0
             else:
-                  if ball_to_agent_magnitude <= 2: 
+                  if ball_to_agent_magnitude <= 1 and not team_has_ball: 
                         # intercept
                         action_type = 1
                   else: 
                         # run
                         action_type = 0
+
             return action_type
