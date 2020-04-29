@@ -73,9 +73,8 @@ class Easy_Agent():
                         # shoot
                         action_type = 2
 
-                  elif (self.mate_observation[0] < self.agent_observation[0] 
-                        or self.mate_observation[1] < self.agent_observation[1] - 7 
-                        or self.mate_observation[1] > self.agent_observation[1] + 7) and random.random() > 0.8 and mate_to_agent_magnitude > 12:
+                  elif (self.mate_observation[0] < self.agent_observation[0] - 10)\
+                        and random.random() > 0.8 and mate_to_agent_magnitude > 12:
                         # assist
                         action_type = 3
 
@@ -83,7 +82,7 @@ class Easy_Agent():
                         # run
                         action_type = 0
             else:
-                  if ball_to_agent_magnitude <= 1 and not team_has_ball: 
+                  if ball_to_agent_magnitude <= 1 and random.random() > 0.3: 
                         # intercept
                         action_type = 1
                   else: 
