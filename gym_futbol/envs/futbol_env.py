@@ -415,7 +415,7 @@ class FutbolEnv(gym.Env):
                         if self.Debug: 
                               print(agent.name + " no ball: intercept")
 
-                        agent_observation[2:5] = np.array([0,0,0])
+                        # agent_observation[2:5] = np.array([0,0,0])
 
                         intercept_distance = 1
 
@@ -430,7 +430,7 @@ class FutbolEnv(gym.Env):
 
                               if intercept_success or self.ball_owner == BallOwner.NOONE: 
 
-                                    ball_observation[2:5] = np.array([0, 0, 0])
+                                    ball_observation[2:5] = agent_observation[2:5]
                                     ball_observation[:2] = agent_observation[:2]
                                     self.last_ball_owner = copy.copy(self.ball_owner)
                                     self.ball_owner = BallOwner(agent.agent_index)
