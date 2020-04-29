@@ -649,6 +649,8 @@ class FutbolEnv(gym.Env):
                   if self.one_goal_end: 
                         done = True
 
+            self.ball_owner_array_update()
+
             # figure out whether the game is over
             if self.time >= self.game_time:
                   done = True
@@ -656,6 +658,25 @@ class FutbolEnv(gym.Env):
             # one second passes in the game
             self.time += STEP_SIZE
             return self.obs, reward, done, {}
+
+      
+      def ball_owner_array_update(self):
+            if self.ball_owner == BallOwner.AI_1:
+                  owner_idx = self.ai_1_index
+            elif self.ball_owner == BallOwner.AI_2:
+                  owner_idx = self.ai_2_index
+            elif self.ball_owner == BallOwner.OPP_1:
+                  owner_idx = self.opp_1_index
+            elif self.ball_owner == BallOwner.OPP_2:
+                  owner_idx = self.opp_2_index
+            else:
+                  owner_idx = self.ball_index
+
+            for idx in range(5):
+                  if idx == owner_idx:
+                        self.obs[self.ball_owner_array_index][idx] = 1
+                  else:
+                        self.obs[self.ball_owner_array_index][idx] = 0
 
     
       def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2):
