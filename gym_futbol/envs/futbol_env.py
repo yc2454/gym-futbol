@@ -48,6 +48,11 @@ STEP_SIZE = 0.2
 NORMAL_MISS = 5
 UNDER_DEFENCE_MISS = 10
 
+# maximum intercept success probability
+MAX_INTERCEPT_PROB = 0.8
+MAX_INTERCEPT_DIST = 2
+MIN_INTERCEPT_DIST = 1
+
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
 def get_vec(coor_t, coor_o):
@@ -105,6 +110,19 @@ def screw_vec(vec, vec_mag, accuracy=NORMAL_MISS):
       twisted_sin = (sin * swing_cos) + (cos * swing_sin)
       twisted_vec = np.array([twisted_cos * vec_mag, twisted_sin * vec_mag])
       return twisted_vec
+
+# calculate the probabiity of successfully taking the ball
+# if distance [d] < [d1], probability = MAX_INTERCEPT_PROB
+# if [d] > d2, probability = 0
+# probability decreases linearly between [d1] and [d2]
+def intercept_chance(d, d1, d2):
+      if d < d1:
+            return MAX_INTERCEPT_PROB
+      elif d >= d1 and d <= d2:
+            k = MAX_INTERCEPT_PROB / (d1 - d2)
+            return k * (d - d2)
+      else:
+            0
 
 
 class FutbolEnv(gym.Env):
@@ -417,31 +435,23 @@ class FutbolEnv(gym.Env):
 
                         # agent_observation[2:5] = np.array([0,0,0])
 
-                        intercept_distance = 1
+                        intercept_success = random.random() < \
+                              intercept_chance(ball_to_agent_magnitude, MIN_INTERCEPT_DIST, MAX_INTERCEPT_DIST)
 
-                        if ball_to_agent_magnitude > intercept_distance:
+                        if intercept_success or self.ball_owner == BallOwner.NOONE: 
 
+                              ball_observation[2:5] = agent_observation[2:5]
+                              ball_observation[:2] = agent_observation[:2]
+                              self.last_ball_owner = copy.copy(self.ball_owner)
+                              self.ball_owner = BallOwner(agent.agent_index)
+                              
                               if self.Debug:
-                                    print(agent.name + " too far, intercept failed")
+                                    print(agent.name + " lucky, intercept success")
 
                         else: 
-                              
-                              intercept_success = random.random() <= 0.3
 
-                              if intercept_success or self.ball_owner == BallOwner.NOONE: 
-
-                                    ball_observation[2:5] = agent_observation[2:5]
-                                    ball_observation[:2] = agent_observation[:2]
-                                    self.last_ball_owner = copy.copy(self.ball_owner)
-                                    self.ball_owner = BallOwner(agent.agent_index)
-                                    
-                                    if self.Debug:
-                                          print(agent.name + " lucky, intercept success")
-
-                              else: 
-
-                                    if self.Debug:
-                                          print(agent.name + " unlucky, intercept failed")
+                              if self.Debug:
+                                    print(agent.name + " unlucky, intercept failed")
 
                   # no ball, if teammate also doesn't have ball, run toward ball 
                   # otherwise, run towards the goal
@@ -597,6 +607,7 @@ class FutbolEnv(gym.Env):
             o_ai_2 = copy.copy(self.ai_2)
             o_p_1 = copy.copy(self.opp_1)
             o_p_2 = copy.copy(self.opp_2)
+            o_b_o_a = copy.copy(self.ball_owner_array)
 
             self._opp_team_set_vector_observation()
 
@@ -606,7 +617,7 @@ class FutbolEnv(gym.Env):
             self._step_vector_observations(self.obs)
 
             # calculate reward
-            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2)
+            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
 
             done = False
 
@@ -679,7 +690,7 @@ class FutbolEnv(gym.Env):
                         self.obs[self.ball_owner_array_index][idx] = 0
 
     
-      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2):
+      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner):
 
             ball_adv = self.ball[0] - ball[0]
             ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
@@ -694,7 +705,9 @@ class FutbolEnv(gym.Env):
             else:
                   out_of_field = 0
 
-            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==1):
+                  get_ball = 2 * BALL_CONTROL
+            elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
                   get_ball = BALL_CONTROL
             else:
                   get_ball = -BALL_CONTROL
