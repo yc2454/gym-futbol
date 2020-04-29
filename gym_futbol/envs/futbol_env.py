@@ -581,9 +581,11 @@ class FutbolEnv(gym.Env):
             
 
       def out_of_field(self):
-            x = self.ball[0] < 0 or self.ball[0] > self.length
-            y = self.ball[1] < 0 or self.ball[1] > self.width
-            return x or y
+            x_out = self.ball[0] < 0 or self.ball[0] > self.length
+            y_out = self.ball[1] < 0 or self.ball[1] > self.width
+            y_score = self.ball[1] > self.goal_down - 2 and self.ball[1] < self.goal_up + 2
+            return (x_out and not y_score) or y_out
+
                   
       def step(self, ai_action_type):
 
@@ -596,7 +598,6 @@ class FutbolEnv(gym.Env):
             self._opp_team_set_vector_observation()
 
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
-            
             self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
 
             self._step_vector_observations(self.obs)
@@ -617,7 +618,6 @@ class FutbolEnv(gym.Env):
                         print("ai : opp = " + str(self.ai_score) + " : " + str(self.opp_score))
 
                   if self.one_goal_end: 
-
                         done = True
 
                   ### changed from simple reset()
@@ -636,7 +636,6 @@ class FutbolEnv(gym.Env):
                   self.opp_2 = self.obs[self.opp_2_index]
                   self.ball = self.obs[self.ball_index]
 
-            
             if self.out(self.ball):
                   self.fix(self.last_ball_owner)
                   if self.Debug: 
@@ -644,7 +643,6 @@ class FutbolEnv(gym.Env):
 
                   if self.one_goal_end: 
                         done = True
-
 
             # figure out whether the game is over
             if self.time >= self.game_time:
@@ -657,12 +655,10 @@ class FutbolEnv(gym.Env):
     
       def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2):
 
-            # ball_adv = self.ball[0] - ball[0]
+            ball_adv = self.ball[0] - ball[0]
+            ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
 
             # player_adv = self.ai_1[0] - ai_1[0] + self.ai_2[0] - ai_2[0]
-
-            # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
-            # defence_r = defence * DEFENCE_REWARD_BASE
 
             # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
             # defence_r = defence * DEFENCE_REWARD_BASE
@@ -675,7 +671,7 @@ class FutbolEnv(gym.Env):
             if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
                   get_ball = BALL_CONTROL
             else:
-                  get_ball = 0
+                  get_ball = -BALL_CONTROL
 
             if self.score() and self.ball[0] >= FIELD_LEN:
                   score = GOAL_REWARD
@@ -691,8 +687,7 @@ class FutbolEnv(gym.Env):
             else:
                   get_scored = 0
 
-
-            return get_ball + score + get_scored + out_of_field
+            return get_ball + score + get_scored + out_of_field + ball_adv_r
 
 
       def _opp_team_set_vector_observation(self):
@@ -729,9 +724,7 @@ class FutbolEnv(gym.Env):
                   if opp1_action == Action.run:
 
                         # run_to_goal_p = 0.5
-
                         # if random.random() > run_to_goal_p:
-
                         if self.opp_1[1] > self.width * 0.2:
 
                                 opp1_set_target = True
@@ -749,7 +742,6 @@ class FutbolEnv(gym.Env):
                   if opp2_action == Action.run:
 
                         # run_to_goal_p = 0.5
-
                         # if random.random() > run_to_goal_p:
 
                         if self.opp_2[1] < self.width * 0.8:
