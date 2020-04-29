@@ -137,12 +137,13 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 5),
+            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 6),
                                                 high=np.array([[length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
-                                                      [length, width, length, width, shoot_speed]]),
+                                                      [length, width, length, width, shoot_speed],
+                                                      [1, 1, 1, 1, 1]]),
                                                 dtype=np.float64)
 
 
@@ -152,6 +153,7 @@ class FutbolEnv(gym.Env):
             self.opp_1_index = 2
             self.opp_2_index = 3
             self.ball_index = 4
+            self.ball_owner_array_index = 5
             
             self.obs = self.reset()
 
@@ -183,14 +185,19 @@ class FutbolEnv(gym.Env):
             self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
             # position and movement of the first opponent player
             self.opp_2 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 - 5, 0, 0, 0])
+            # array representing who has the ball
+            # index 0-5 represents ai 1, ai 2, opp 1, opp 2, no one, respectively
+            # value 0 means doesn't have ball, 1 means have ball
+            self.ball_owner_array = np.array([0, 0, 0, 0, 0])
             
-            self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball)).reshape((5, 5))
+            self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball, self.ball_owner_array)).reshape((6, 5))
 
             self.ai_1 = self.obs[self.ai_1_index]
             self.ai_2 = self.obs[self.ai_2_index]
             self.opp_1 = self.obs[self.opp_1_index]
             self.opp_2 = self.obs[self.opp_2_index]
             self.ball = self.obs[self.ball_index]
+            self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
             # who has the ball
             self.ball_owner = BallOwner.NOONE
@@ -261,13 +268,9 @@ class FutbolEnv(gym.Env):
       def _set_vector_observation(self, agent, action_type, set_target = False, target = [0, 0]): 
 
             action = Action(action_type)
-
             agent_observation = self.obs[agent.agent_index]
-
             ball_observation = self.obs[self.ball_index]
-
             target_padding = 3
-
             target_y = random.randint(self.goal_down + target_padding, self.goal_up - target_padding) 
 
             # if self.Debug: 
@@ -626,7 +629,8 @@ class FutbolEnv(gym.Env):
                   self.ai_2 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 - 5, 0, 0, 0])
                   self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
                   self.opp_2 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 - 5, 0, 0, 0])
-                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball)).reshape((5, 5))
+                  self.ball_owner_array = np.array([0, 0, 0, 0, 0])
+                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball, self.ball_owner_array)).reshape((6, 5))
                   self.ball_owner = BallOwner.NOONE
                   self.last_ball_owner = BallOwner.NOONE
 
@@ -635,8 +639,9 @@ class FutbolEnv(gym.Env):
                   self.opp_1 = self.obs[self.opp_1_index]
                   self.opp_2 = self.obs[self.opp_2_index]
                   self.ball = self.obs[self.ball_index]
+                  self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
-            if self.out(self.ball):
+            if self.out_of_field():
                   self.fix(self.last_ball_owner)
                   if self.Debug: 
                         print("fix out of box ball")
