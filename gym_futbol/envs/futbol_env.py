@@ -117,12 +117,12 @@ def screw_vec(vec, vec_mag, accuracy=NORMAL_MISS):
 # probability decreases linearly between [d1] and [d2]
 def intercept_chance(d, d1, d2):
       if d < d1:
-            return MAX_INTERCEPT_PROB
+            return 0.8
       elif d >= d1 and d <= d2:
-            k = MAX_INTERCEPT_PROB / (d1 - d2)
+            k = 0.8 / (d1 - d2)
             return k * (d - d2)
       else:
-            0
+            return 0
 
 
 class FutbolEnv(gym.Env):
