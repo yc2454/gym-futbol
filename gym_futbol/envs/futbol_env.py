@@ -31,7 +31,7 @@ SHOOT_SPEED = 20
 PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
-GAME_TIME = 25
+GAME_TIME = 50
 GOAL_REWARD = 2000
 BALL_ADV_REWARD_BASE = 7000
 PLAYER_ADV_REWARD_BASE = 1500
@@ -396,14 +396,14 @@ class FutbolEnv(gym.Env):
                   else:
                         goal_to_agent, _ = get_vec(np.array([self.length, self.width/2]), agent_observation[:2])
 
+                  ### MADE CHANGE
                   # no ball and intercept
                       # if close, try get ball, stop agent, zeros agent's target x, y, mag
                           # intercept success
-                              # agent_vec = x, y, 0, 0, 0
-                              # ball_vec = x, y, 0, 0, 0
+                              # agent_vec = ball_vec
                               # ball owener change
                           # intercept failed
-                              # agent_vec = x, y, 0, 0, 0
+                              # agent_vec no change
                               # ball_vec = x', y', tx', ty', m' (no change)
                               # ball owener not change
                       # if not close, stop agent, zeros agent's target x, y, mag
