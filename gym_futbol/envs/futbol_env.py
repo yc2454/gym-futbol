@@ -31,7 +31,7 @@ SHOOT_SPEED = 20
 PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
-GAME_TIME = 12
+GAME_TIME = 25
 GOAL_REWARD = 2000
 BALL_ADV_REWARD_BASE = 7000
 PLAYER_ADV_REWARD_BASE = 1500
@@ -41,12 +41,12 @@ DEFENCE_REWARD_BASE = 800
 
 # size of each time step 
 # step_size=1 means every step is 1s 
-STEP_SIZE = 0.1
+STEP_SIZE = 0.2
 
 # missing from target value of shooting, represented by the 
 # standard deviation of shooting angle
-NORMAL_MISS = 15
-UNDER_DEFENCE_MISS = 30
+NORMAL_MISS = 5
+UNDER_DEFENCE_MISS = 10
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
@@ -109,7 +109,10 @@ def screw_vec(vec, vec_mag, accuracy=NORMAL_MISS):
 
 class FutbolEnv(gym.Env):
 
-      def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE):
+      def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, 
+                   game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
+                   shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
+                   one_goal_end = False):
 
             # constants 
             self.length = length
@@ -120,6 +123,7 @@ class FutbolEnv(gym.Env):
             self.game_time = game_time
             self.player_speed = player_speed
             self.shoot_speed = shoot_speed
+            self.one_goal_end = one_goal_end
 
             self.Debug = Debug
 
@@ -155,12 +159,12 @@ class FutbolEnv(gym.Env):
             self.time = 0
 
              # opp easy agent 1
-            self.opp_1_agent = Easy_Agent('opp_1', self.obs, self.opp_1_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.opp_2_agent = Easy_Agent('opp_2', self.obs, self.opp_2_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.opp_1_agent = Easy_Agent('opp_1', self.obs, self.opp_1_index, self.opp_2_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.opp_2_agent = Easy_Agent('opp_2', self.obs, self.opp_2_index, self.opp_1_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
 
             # ai easy agent
-            self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_1), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.ai_2_agent = Easy_Agent('ai_2', self.obs, self.ai_2_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ai_2_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_2_agent = Easy_Agent('ai_2', self.obs, self.ai_2_index, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
             
             
       # Reset the state of the environment to an initial state
@@ -254,7 +258,7 @@ class FutbolEnv(gym.Env):
           # [2]: target x coor - object x coor
           # [3]: target y coor - object y coor
           # [4]: speed magnitude
-      def _set_vector_observation(self, agent, action_type): 
+      def _set_vector_observation(self, agent, action_type, set_target = False, target = [0, 0]): 
 
             action = Action(action_type)
 
@@ -262,9 +266,13 @@ class FutbolEnv(gym.Env):
 
             ball_observation = self.obs[self.ball_index]
 
-            target_padding = 1
+            target_padding = 3
 
-            target_y = random.randint(self.goal_down + target_padding, self.goal_up - target_padding)            
+            target_y = random.randint(self.goal_down + target_padding, self.goal_up - target_padding) 
+
+            # if self.Debug: 
+                  
+            #       print(agent.name + " has ball: " + str(agent.has_ball))           
             
             if agent.has_ball: 
 
@@ -287,18 +295,24 @@ class FutbolEnv(gym.Env):
                   elif action == Action.run: 
 
                         agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
-                        
-                        if self.Debug: 
-                              print(agent.name + " with ball: run to goal")
 
-                        # print(agent_observation)
+                        if set_target:
 
-                        if agent.team == 'right': 
-                              agent_observation[2:4], _ = get_vec(np.array([0, target_y]), agent_observation[:2])
-                        else: 
-                              agent_observation[2:4], _ = get_vec(np.array([self.length, target_y]), agent_observation[:2])
+                              if self.Debug: 
+                                    print(agent.name + " with ball: run to target")
+
+                              agent_observation[2:4] = target
+
+                        else:
                         
-                        # print(agent_observation)
+                              if self.Debug: 
+                                    print(agent.name + " with ball: run to goal")
+
+                              if agent.team == 'right': 
+                                    agent_observation[2:4], _ = get_vec(np.array([0, target_y]), agent_observation[:2])
+                              else: 
+                                    agent_observation[2:4], _ = get_vec(np.array([self.length, target_y]), agent_observation[:2])
+                        
 
                         self.obs[self.ball_index] = agent_observation
                   
@@ -345,17 +359,20 @@ class FutbolEnv(gym.Env):
                         else:
                               mate = self.ai_1
             
-                        mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
+                        # mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
 
-                        # anticipate the teammate's location based on the current movement
-                        if mate_vec_mag == 0:
-                              mate_next_pos_x = mate[0]
-                              mate_next_pos_y = mate[1]
-                        else:
-                              mate_next_pos_x = mate[0] + (mate[2]/mate_vec_mag)*mate[4]
-                              mate_next_pos_y = mate[1] + (mate[3]/mate_vec_mag)*mate[4]
+                        # # anticipate the teammate's location based on the current movement
+                        # if mate_vec_mag == 0:
+                        #       mate_next_pos_x = mate[0]
+                        #       mate_next_pos_y = mate[1]
+                        # else:
+                        #       mate_next_pos_x = mate[0] + (mate[2]/mate_vec_mag)*mate[4] * STEP_SIZE * 2
+                        #       mate_next_pos_y = mate[1] + (mate[3]/mate_vec_mag)*mate[4] * STEP_SIZE * 2
 
-                        mate_to_ball, _ = get_vec(np.array([mate_next_pos_x, mate_next_pos_y]), ball_observation[:2])
+                        # mate_to_ball, _ = get_vec(np.array([mate_next_pos_x, mate_next_pos_y]), ball_observation[:2])
+
+                        mate_to_ball, _ = get_vec(mate[:2], ball_observation[:2])
+
                         ball_observation[2:4] = mate_to_ball
 
                         agent.has_ball = False
@@ -432,13 +449,22 @@ class FutbolEnv(gym.Env):
 
                         agent_observation[4] = 1.0 * random.randint(self.player_speed - 2, self.player_speed + 2)
 
-                        if self.Debug: 
-                              print(agent.name + " no ball: run to ball")
+                        if set_target:
+    
+                              if self.Debug: 
+                                    print(agent.name + " no ball: run to target")
+                                    
+                              agent_observation[2:4] = target
 
-                        if self.ball_owner != BallOwner(agent.agent_index):
-                              agent_observation[2:4] = ball_to_agent
                         else:
-                              agent_observation[2:4] = goal_to_agent
+
+                              if self.Debug: 
+                                    print(agent.name + " no ball: run to ball")
+
+                              if self.ball_owner != BallOwner(agent.agent_index):
+                                    agent_observation[2:4] = ball_to_agent
+                              else:
+                                    agent_observation[2:4] = goal_to_agent
               
                   # no ball and shoot, stop agent
                       # agent_vec = x, y, 0, 0, 0
@@ -475,11 +501,18 @@ class FutbolEnv(gym.Env):
 
             if self.ball_owner == BallOwner(agent.agent_index): 
                   agent_has_ball = True
+                  team_has_ball = True
+            elif self.ball_owner == BallOwner(agent.mate_index):
+                  agent_has_ball = False
+                  team_has_ball = True
             else:
                   agent_has_ball = False
+                  team_has_ball = False
 
             if not action_set:
-                  action_type = agent.get_action_type(self.obs, agent_has_ball)
+
+                  action_type = agent.get_action_type(self.obs, agent_has_ball, team_has_ball)
+
             else:
                   agent._set_has_ball(agent_has_ball)
 
@@ -560,9 +593,7 @@ class FutbolEnv(gym.Env):
             o_p_1 = copy.copy(self.opp_1)
             o_p_2 = copy.copy(self.opp_2)
 
-            self._agent_set_vector_observation(self.opp_1_agent)
-
-            self._agent_set_vector_observation(self.opp_2_agent)
+            self._opp_team_set_vector_observation()
 
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
             
@@ -573,6 +604,8 @@ class FutbolEnv(gym.Env):
             # calculate reward
             reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2)
 
+            done = False
+
             if self.score():
                   if self.ball[0] <= 0:
                         self.opp_score += 1
@@ -582,6 +615,10 @@ class FutbolEnv(gym.Env):
                   if self.Debug: 
                         print("Score!!!")
                         print("ai : opp = " + str(self.ai_score) + " : " + str(self.opp_score))
+
+                  if self.one_goal_end: 
+
+                        done = True
 
                   ### changed from simple reset()
                   self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
@@ -605,12 +642,13 @@ class FutbolEnv(gym.Env):
                   if self.Debug: 
                         print("fix out of box ball")
 
+                  if self.one_goal_end: 
+                        done = True
+
 
             # figure out whether the game is over
-            if self.time >= GAME_TIME:
+            if self.time >= self.game_time:
                   done = True
-            else:
-                  done = False
             
             # one second passes in the game
             self.time += STEP_SIZE
@@ -621,7 +659,10 @@ class FutbolEnv(gym.Env):
 
             # ball_adv = self.ball[0] - ball[0]
 
-            # ball_adv_r = (ball_adv/FIELD_LEN) * BALL_ADV_REWARD_BASE
+            # player_adv = self.ai_1[0] - ai_1[0] + self.ai_2[0] - ai_2[0]
+
+            # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
+            # defence_r = defence * DEFENCE_REWARD_BASE
 
             # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
             # defence_r = defence * DEFENCE_REWARD_BASE
@@ -631,10 +672,10 @@ class FutbolEnv(gym.Env):
             else:
                   out_of_field = 0
 
-            # if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
-            #       get_ball = BALL_CONTROL
-            # else:
-            #       get_ball = 0
+            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+                  get_ball = BALL_CONTROL
+            else:
+                  get_ball = 0
 
             if self.score() and self.ball[0] >= FIELD_LEN:
                   score = GOAL_REWARD
@@ -651,4 +692,130 @@ class FutbolEnv(gym.Env):
                   get_scored = 0
 
 
-            return score + get_scored + out_of_field
+            return get_ball + score + get_scored + out_of_field
+
+
+      def _opp_team_set_vector_observation(self):
+
+            if self.ball_owner == BallOwner(self.opp_1_agent.agent_index): 
+                  opp_1_has_ball = True
+                  opp_2_has_ball = False
+                  team_has_ball = True
+            elif self.ball_owner == BallOwner(self.opp_2_agent.agent_index):
+                  opp_1_has_ball = False
+                  opp_2_has_ball = True
+                  team_has_ball = True
+            else:
+                  opp_1_has_ball = False
+                  opp_2_has_ball = False
+                  team_has_ball = False
+
+            opp1_action_type = self.opp_1_agent.get_action_type(self.obs, opp_1_has_ball, team_has_ball)
+            opp2_action_type = self.opp_2_agent.get_action_type(self.obs, opp_2_has_ball, team_has_ball)
+
+            opp1_action = Action(opp1_action_type)
+            opp2_action = Action(opp2_action_type)
+
+            opp1_set_target = False
+            opp2_set_target = False
+
+            opp1_target = [0, 0]
+            opp2_target = [0, 0]
+
+            # randomize the action of opp2 opp1
+
+            if opp_1_has_ball:
+
+                  if opp1_action == Action.run:
+
+                        # run_to_goal_p = 0.5
+
+                        # if random.random() > run_to_goal_p:
+
+                        if self.opp_1[1] > self.width * 0.2:
+
+                                opp1_set_target = True
+                                opp1_target = [-1, -1]
+
+                        if opp2_action == Action.run and self.opp_2[0] > self.length * 0.1 :
+
+                                if self.opp_2[1] < self.width * 0.8:
+
+                                        opp2_set_target = True
+                                        opp2_target = [-1, 1]
+
+            if opp_2_has_ball:
+
+                  if opp2_action == Action.run:
+
+                        # run_to_goal_p = 0.5
+
+                        # if random.random() > run_to_goal_p:
+
+                        if self.opp_2[1] < self.width * 0.8:
+                                
+                                opp2_set_target = True
+                                opp2_target = [-1, 1]
+
+                        if opp1_action == Action.run and self.opp_1[0] > self.length * 0.1 :
+
+                                if self.opp_1[1] > self.width * 0.2:
+
+                                        opp1_set_target = True
+                                        opp1_target = [-1, -1]
+
+
+            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+
+                    if self.ball[0] < self.length * 0.6:
+
+                            defence_point = [self.length * 0.75, self.width * 0.5]
+                            
+                            if self.opp_1[0] > self.opp_2[0]:
+
+                                  opp1_action_type = 0 # run
+                                  opp1_set_target = True
+                                  opp1_target, _ = get_vec(defence_point, self.opp_1)
+
+                            else:
+
+                                  opp2_action_type = 0 # run
+                                  opp2_set_target = True
+                                  opp2_target, _ = get_vec(defence_point, self.opp_2)
+
+
+
+            self.obs[self.opp_1_agent.agent_index] = self._set_vector_observation(self.opp_1_agent, 
+                                                                                  opp1_action_type,
+                                                                                  set_target = opp1_set_target, 
+                                                                                  target = opp1_target)
+            
+            self.obs[self.opp_2_agent.agent_index] = self._set_vector_observation(self.opp_2_agent, 
+                                                                                  opp2_action_type,
+                                                                                  set_target = opp2_set_target, 
+                                                                                  target = opp2_target)
+            
+
+            if self.ball_owner == BallOwner.NOONE and opp1_action == Action.run and opp2_action == Action.run:
+
+                    # anticipate the ball movement
+                    ball_next_obs = copy.copy(self.ball)
+
+                    self._step_by_observation(ball_next_obs)
+
+                    opp1_to_ball_next, opp1_to_ball_next_mag = get_vec(ball_next_obs, self.opp_1)
+                    opp2_to_ball_next, opp2_to_ball_next_mag = get_vec(ball_next_obs, self.opp_2)
+
+                    if opp1_to_ball_next_mag < STEP_SIZE * self.player_speed: 
+
+                            target_m = opp1_to_ball_next_mag / STEP_SIZE
+                            self.opp_1[2:4] = opp1_to_ball_next
+                            self.opp_1[4] = target_m
+
+                    elif opp2_to_ball_next_mag < STEP_SIZE * self.player_speed:
+
+                            target_m = opp2_to_ball_next_mag / STEP_SIZE
+                            self.opp_2[2:4] = opp2_to_ball_next
+                            self.opp_2[4] = target_m
+          
+
