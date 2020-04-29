@@ -75,7 +75,7 @@ class Easy_Agent():
 
                   elif (self.mate_observation[0] < self.agent_observation[0] 
                         or self.mate_observation[1] < self.agent_observation[1] - 7 
-                        or self.mate_observation[1] > self.agent_observation[1] + 7) and random.random() > 0.7 and mate_to_agent_magnitude > 12:
+                        or self.mate_observation[1] > self.agent_observation[1] + 7) and random.random() > 0.8 and mate_to_agent_magnitude > 12:
                         # assist
                         action_type = 3
 
