@@ -391,8 +391,10 @@ class FutbolEnv(gym.Env):
                         # mate_to_ball, _ = get_vec(np.array([mate_next_pos_x, mate_next_pos_y]), ball_observation[:2])
 
                         mate_to_ball, mate_to_ball_mag = get_vec(mate[:2], ball_observation[:2])
-                        pass_speed = mate_to_ball_mag / STEP_SIZE
-                        ball_observation[4] = random.uniform(pass_speed - 1, pass_speed + 1)
+                        custom_pass_speed = mate_to_ball_mag / STEP_SIZE
+                        if custom_pass_speed > SHOOT_SPEED:
+                              custom_pass_speed = SHOOT_SPEED
+                        ball_observation[4] = random.uniform(custom_pass_speed - 1, custom_pass_speed + 1)
 
                         ball_observation[2:4] = mate_to_ball
 
@@ -706,8 +708,8 @@ class FutbolEnv(gym.Env):
             else:
                   out_of_field = 0
 
-            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==1):
-                  get_ball = 2 * BALL_CONTROL
+            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
+                  get_ball = 5 * BALL_CONTROL
             elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
                   get_ball = BALL_CONTROL
             else:
