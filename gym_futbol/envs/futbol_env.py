@@ -701,7 +701,10 @@ class FutbolEnv(gym.Env):
             # player_adv = self.ai_1[0] - ai_1[0] + self.ai_2[0] - ai_2[0]
 
             defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
-            defence_r = defence * DEFENCE_REWARD_BASE
+            if defence >= 2:
+                  defence_r = DEFENCE_REWARD_BASE
+            else:
+                  defence_r = 0
 
             if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
