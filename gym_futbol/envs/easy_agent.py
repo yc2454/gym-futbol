@@ -82,7 +82,7 @@ class Easy_Agent():
                         # run
                         action_type = 0
             else:
-                  if ball_to_agent_magnitude <= 1 and random.random() > 0.3: 
+                  if ball_to_agent_magnitude <= 1 and random.random() < 0.3: 
                         # intercept
                         action_type = 1
                   else: 
