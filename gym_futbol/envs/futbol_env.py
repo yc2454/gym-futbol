@@ -315,7 +315,7 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
+                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed)
 
                         if set_target:
 
@@ -334,8 +334,11 @@ class FutbolEnv(gym.Env):
                               else: 
                                     agent_observation[2:4], _ = get_vec(np.array([self.length, target_y]), agent_observation[:2])
                         
-
-                        self.obs[self.ball_index] = agent_observation
+                        # with 10% chance, the player drops the ball while running
+                        if random.random() < 0.1:
+                              self.ball_owner = BallOwner.NOONE
+                        else:
+                              self.obs[self.ball_index] = agent_observation
                   
                   # has ball and shoot toward goal, zeros agent's target x, y, mag
                       # agent_vec = x, y, 0, 0, 0
@@ -463,7 +466,7 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 2, self.player_speed + 2)
+                        agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
 
                         if set_target:
     
