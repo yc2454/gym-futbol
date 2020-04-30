@@ -33,7 +33,7 @@ PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
 GAME_TIME = 50
 GOAL_REWARD = 2000
-BALL_ADV_REWARD_BASE = 7000
+BALL_ADV_REWARD_BASE = 700
 PLAYER_ADV_REWARD_BASE = 1500
 OUT_OF_FIELD_PENALTY = -600
 BALL_CONTROL = 300
@@ -117,9 +117,9 @@ def screw_vec(vec, vec_mag, accuracy=NORMAL_MISS):
 # probability decreases linearly between [d1] and [d2]
 def intercept_chance(d, d1, d2):
       if d < d1:
-            return 0.8
+            return MAX_INTERCEPT_PROB
       elif d >= d1 and d <= d2:
-            k = 0.8 / (d1 - d2)
+            k = MAX_INTERCEPT_PROB / (d1 - d2)
             return k * (d - d2)
       else:
             return 0
@@ -365,8 +365,6 @@ class FutbolEnv(gym.Env):
 
                   elif action == Action.assist:
 
-                        ball_observation[4] = random.randint(PASS_SPEED - 5, PASS_SPEED) * 1.0
-
                         if self.Debug: 
                               print(agent.name + " with ball: pass")
 
@@ -392,7 +390,9 @@ class FutbolEnv(gym.Env):
 
                         # mate_to_ball, _ = get_vec(np.array([mate_next_pos_x, mate_next_pos_y]), ball_observation[:2])
 
-                        mate_to_ball, _ = get_vec(mate[:2], ball_observation[:2])
+                        mate_to_ball, mate_to_ball_mag = get_vec(mate[:2], ball_observation[:2])
+                        pass_speed = mate_to_ball_mag / STEP_SIZE
+                        ball_observation[4] = random.uniform(pass_speed - 1, pass_speed + 1)
 
                         ball_observation[2:4] = mate_to_ball
 
@@ -438,7 +438,8 @@ class FutbolEnv(gym.Env):
                         intercept_success = random.random() < \
                               intercept_chance(ball_to_agent_magnitude, MIN_INTERCEPT_DIST, MAX_INTERCEPT_DIST)
 
-                        if intercept_success or self.ball_owner == BallOwner.NOONE: 
+                        if intercept_success or \
+                              (self.ball_owner == BallOwner.NOONE and ball_to_agent_magnitude < MAX_INTERCEPT_DIST): 
 
                               ball_observation[2:5] = agent_observation[2:5]
                               ball_observation[:2] = agent_observation[:2]
