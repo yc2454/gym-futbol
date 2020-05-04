@@ -33,8 +33,8 @@ PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
 GAME_TIME = 40
 GOAL_REWARD = 40000
-BALL_ADV_REWARD_BASE = 700
-PLAYER_ADV_REWARD_BASE = 1500
+BALL_ADV_REWARD_BASE = 7000
+PLAYER_ADV_REWARD_BASE = 5000
 OUT_OF_FIELD_PENALTY = -600
 BALL_CONTROL = 300
 DEFENCE_REWARD_BASE = 800
@@ -724,10 +724,18 @@ class FutbolEnv(gym.Env):
     
       def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner):
 
-            ball_adv = self.ball[0] - ball[0]
+            ball_adv = (self.ball[0] - ball[0]) / FIELD_LEN
             ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
 
-            # player_adv = self.ai_1[0] - ai_1[0] + self.ai_2[0] - ai_2[0]
+            player_adv_1 = (self.ai_1[0] - ai_1[0]) / FIELD_LEN
+            player_adv_2 = (self.ai_2[0] - ai_2[0]) / FIELD_LEN
+
+            if self.ball_owner == BallOwner.AI_1:
+                  player_adv_r = player_adv_2 * PLAYER_ADV_REWARD_BASE
+            elif self.ball_owner == BallOwner.AI_2:
+                  player_adv_r = player_adv_1 * PLAYER_ADV_REWARD_BASE
+            else:
+                  player_adv_r = 0
 
             defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
             defence_r = defence * DEFENCE_REWARD_BASE
@@ -771,7 +779,7 @@ class FutbolEnv(gym.Env):
 
             else: 
 
-                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r
+                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r + player_adv_r
 
 
       def _opp_team_set_vector_observation(self):
