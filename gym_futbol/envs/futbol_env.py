@@ -738,7 +738,7 @@ class FutbolEnv(gym.Env):
                   out_of_field = 0
 
             if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
-                  get_ball = 100 * BALL_CONTROL
+                  get_ball = 80 * BALL_CONTROL
             elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
                   get_ball = BALL_CONTROL
             else:
