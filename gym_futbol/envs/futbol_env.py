@@ -737,10 +737,17 @@ class FutbolEnv(gym.Env):
             else:
                   out_of_field = 0
 
-            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
-                  get_ball = 80 * BALL_CONTROL
-            elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
-                  get_ball = BALL_CONTROL
+            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and \
+            (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
+                  # if the ball is moving in front of the players, don't get it back
+                  if self.ball[3] > self.ball[4] and self.ball[3] > 0 and \
+                        self.ball[0] > self.ai_1[0] and self.ball[0] > self.ai_2[0]:
+                        get_ball = -10 * BALL_CONTROL
+                  else:
+                        get_ball = 70 * BALL_CONTROL
+            elif (self.ball_owner == BallOwner.AI_1 and ball_owner[self.ai_1_index] == 1) or \
+                  (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==1):
+                  get_ball = 10 * BALL_CONTROL
             else:
                   get_ball = -BALL_CONTROL
 
