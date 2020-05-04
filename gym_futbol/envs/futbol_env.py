@@ -625,8 +625,6 @@ class FutbolEnv(gym.Env):
             o_p_2 = copy.copy(self.opp_2)
             o_b_o_a = copy.copy(self.ball_owner_array)
 
-            self._opp_team_set_vector_observation()
-
             individual_size = 4
 
             if self.random_opp:
@@ -647,6 +645,8 @@ class FutbolEnv(gym.Env):
 
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
             self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
+
+            self._step_vector_observations(self.obs)
 
             # calculate reward
             reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
