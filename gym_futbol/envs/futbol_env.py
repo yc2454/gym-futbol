@@ -454,7 +454,7 @@ class FutbolEnv(gym.Env):
                               intercept_chance(ball_to_agent_magnitude, MIN_INTERCEPT_DIST, MAX_INTERCEPT_DIST)
 
                         if intercept_success or \
-                              (self.ball_owner == BallOwner.NOONE and ball_to_agent_magnitude < MAX_INTERCEPT_DIST + 5): 
+                              (self.ball_owner == BallOwner.NOONE and ball_to_agent_magnitude < MAX_INTERCEPT_DIST + 4): 
 
                               ball_observation[2:5] = agent_observation[2:5]
                               ball_observation[:2] = agent_observation[:2]
