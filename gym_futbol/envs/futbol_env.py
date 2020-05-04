@@ -130,7 +130,8 @@ class FutbolEnv(gym.Env):
       def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, 
                    game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
                    shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
-                   one_goal_end = False):
+                   one_goal_end = False, action_as_int = True, only_reward_goal = True,
+                   random_opp = True):
 
             # constants 
             self.length = length
@@ -144,9 +145,18 @@ class FutbolEnv(gym.Env):
             self.one_goal_end = one_goal_end
 
             self.Debug = Debug
+            self.action_as_int = action_as_int
+            self.only_reward_goal = only_reward_goal
+            self.random_opp = random_opp
 
-            # data structure to contain the 3 actions
-            self.action_space = spaces.Tuple((spaces.Discrete(4), spaces.Discrete(4)))
+            if self.action_as_int:
+
+                  self.action_space = spaces.Discrete(16)
+
+            else: 
+
+                  # data structure to contain the 3 actions
+                  self.action_space = spaces.Tuple((spaces.Discrete(4), spaces.Discrete(4)))
 
             # data structure to contain observations the agent would make in one step
             # the 5 values in the array represents: 
@@ -617,10 +627,26 @@ class FutbolEnv(gym.Env):
 
             self._opp_team_set_vector_observation()
 
+            individual_size = 4
+
+            if self.random_opp:
+
+                  opp_action_type = random.randint(0, 15)
+                  opp_action_type = (opp_action_type // individual_size, opp_action_type % individual_size)
+
+                  self._agent_set_vector_observation(self.opp_1_agent, action_set = True, action_type = opp_action_type[0])
+                  self._agent_set_vector_observation(self.opp_2_agent, action_set = True, action_type = opp_action_type[1])
+
+            else:
+
+                  self._opp_team_set_vector_observation()
+
+            if self.action_as_int:
+
+                  ai_action_type = (ai_action_type // individual_size, ai_action_type % individual_size)
+
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
             self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
-
-            self._step_vector_observations(self.obs)
 
             # calculate reward
             reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
@@ -732,7 +758,17 @@ class FutbolEnv(gym.Env):
             else:
                   get_scored = 0
 
+<<<<<<< HEAD
             return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r
+=======
+            if self.only_reward_goal:
+
+                  return score + get_scored
+
+            else: 
+
+                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r
+>>>>>>> yc2454
 
 
       def _opp_team_set_vector_observation(self):
