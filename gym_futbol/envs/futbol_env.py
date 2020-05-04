@@ -130,7 +130,7 @@ class FutbolEnv(gym.Env):
       def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, 
                    game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
                    shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
-                   one_goal_end = False, action_as_int = True, only_reward_goal = True,
+                   one_goal_end = False, action_as_int = True, only_reward_goal = False,
                    random_opp = True):
 
             # constants 
@@ -270,7 +270,7 @@ class FutbolEnv(gym.Env):
             ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
 
             ax.legend()
-            plt.show()
+#            plt.show()
 
 
       def defence_near(self, agent):
@@ -625,8 +625,6 @@ class FutbolEnv(gym.Env):
             o_p_2 = copy.copy(self.opp_2)
             o_b_o_a = copy.copy(self.ball_owner_array)
 
-            self._opp_team_set_vector_observation()
-
             individual_size = 4
 
             if self.random_opp:
@@ -647,6 +645,8 @@ class FutbolEnv(gym.Env):
 
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
             self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
+
+            self._step_vector_observations(self.obs)
 
             # calculate reward
             reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
@@ -759,7 +759,7 @@ class FutbolEnv(gym.Env):
                   get_scored = 0
 
             if self.only_reward_goal:
-
+    
                   return score + get_scored
 
             else: 
