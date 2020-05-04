@@ -130,7 +130,7 @@ class FutbolEnv(gym.Env):
       def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, 
                    game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
                    shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
-                   one_goal_end = False, action_as_int = True, only_reward_goal = True,
+                   one_goal_end = False, action_as_int = True, only_reward_goal = False,
                    random_opp = True):
 
             # constants 
@@ -758,17 +758,13 @@ class FutbolEnv(gym.Env):
             else:
                   get_scored = 0
 
-<<<<<<< HEAD
-            return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r
-=======
             if self.only_reward_goal:
-
+    
                   return score + get_scored
 
             else: 
 
                   return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r
->>>>>>> yc2454
 
 
       def _opp_team_set_vector_observation(self):
