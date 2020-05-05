@@ -33,8 +33,8 @@ PLARYER_SPEED_W_BALL = 12
 PLARYER_SPEED_WO_BALL = 14
 GAME_TIME = 40
 GOAL_REWARD = 1000000
-BALL_ADV_REWARD_BASE = 7000
-PLAYER_ADV_REWARD_BASE = 25000
+BALL_ADV_REWARD_BASE = 70000
+PLAYER_ADV_REWARD_BASE = 2500
 OUT_OF_FIELD_PENALTY = -600
 BALL_CONTROL = 300
 DEFENCE_REWARD_BASE = 800
@@ -649,7 +649,7 @@ class FutbolEnv(gym.Env):
             self._step_vector_observations(self.obs)
 
             # calculate reward
-            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
+            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a, ai_action_type)
 
             done = False
 
@@ -722,17 +722,25 @@ class FutbolEnv(gym.Env):
                         self.obs[self.ball_owner_array_index][idx] = 0
 
     
-      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner):
+      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner, actions):
 
+            action1 = actions[0]
+            action2 = actions[1]
+            
             ball_adv = (self.ball[0] - ball[0]) / FIELD_LEN
             ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
 
-            player_adv_1 = (self.ai_1[0] - ai_1[0]) / FIELD_LEN
-            player_adv_2 = (self.ai_2[0] - ai_2[0]) / FIELD_LEN
+            # player_adv_1 = (self.ai_1[0] - ai_1[0]) / FIELD_LEN
+            # player_adv_2 = (self.ai_2[0] - ai_2[0]) / FIELD_LEN
 
-            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
-                  player_adv_r = player_adv_2 * PLAYER_ADV_REWARD_BASE \
-                  + player_adv_1 * PLAYER_ADV_REWARD_BASE
+            # if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+            #       player_adv_r = player_adv_2 * PLAYER_ADV_REWARD_BASE \
+            #       + player_adv_1 * PLAYER_ADV_REWARD_BASE
+            # else:
+            #       player_adv_r = 0
+
+            if action1 == Action.run or action2 == Action.run:
+                  player_adv_r = 5 * PLAYER_ADV_REWARD_BASE
             else:
                   player_adv_r = 0
 
@@ -743,7 +751,10 @@ class FutbolEnv(gym.Env):
                   defence_r = -defence * DEFENCE_REWARD_BASE
 
             defended = self.defence_near(self.ai_1_agent) + self.defence_near(self.ai_2_agent)
-            defended_punish = -defended * DEFENCE_REWARD_BASE
+            if ball_owner[self.ai_1_index] == 1 or ball_owner[self.ai_2_index] == 1: 
+                  defended_punish = -defended * DEFENCE_REWARD_BASE
+            else:
+                  defended_punish = 0
 
             if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
@@ -780,11 +791,9 @@ class FutbolEnv(gym.Env):
                   get_scored = 0
 
             if self.only_reward_goal:
-    
                   return score + get_scored
 
             else: 
-
                   return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r + player_adv_r + defended_punish
 
 
