@@ -32,9 +32,9 @@ PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
 GAME_TIME = 40
-GOAL_REWARD = 100000
+GOAL_REWARD = 1000000
 BALL_ADV_REWARD_BASE = 7000
-PLAYER_ADV_REWARD_BASE = 5000
+PLAYER_ADV_REWARD_BASE = 25000
 OUT_OF_FIELD_PENALTY = -600
 BALL_CONTROL = 300
 DEFENCE_REWARD_BASE = 800
@@ -730,10 +730,9 @@ class FutbolEnv(gym.Env):
             player_adv_1 = (self.ai_1[0] - ai_1[0]) / FIELD_LEN
             player_adv_2 = (self.ai_2[0] - ai_2[0]) / FIELD_LEN
 
-            if self.ball_owner == BallOwner.AI_1:
-                  player_adv_r = player_adv_2 * PLAYER_ADV_REWARD_BASE
-            elif self.ball_owner == BallOwner.AI_2:
-                  player_adv_r = player_adv_1 * PLAYER_ADV_REWARD_BASE
+            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+                  player_adv_r = player_adv_2 * PLAYER_ADV_REWARD_BASE \
+                  + player_adv_1 * PLAYER_ADV_REWARD_BASE
             else:
                   player_adv_r = 0
 
