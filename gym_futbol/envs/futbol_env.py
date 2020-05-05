@@ -29,8 +29,8 @@ PRESSURE_RANGE = 2
 
 SHOOT_SPEED = 20
 PASS_SPEED = 10
-PLARYER_SPEED_W_BALL = 6
-PLARYER_SPEED_WO_BALL = 9
+PLARYER_SPEED_W_BALL = 12
+PLARYER_SPEED_WO_BALL = 14
 GAME_TIME = 40
 GOAL_REWARD = 1000000
 BALL_ADV_REWARD_BASE = 7000
@@ -325,7 +325,7 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed)
+                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
 
                         if set_target:
 
@@ -358,7 +358,7 @@ class FutbolEnv(gym.Env):
 
                         accuracy_under_defence = NORMAL_MISS + self.defence_near(agent) * UNDER_DEFENCE_MISS 
 
-                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed) * 1.0
+                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed + 5) * 1.0
 
                         if self.Debug: 
                               print(agent.name + " with ball: shoot")
