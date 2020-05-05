@@ -41,7 +41,7 @@ DEFENCE_REWARD_BASE = 800
 
 # size of each time step 
 # step_size=1 means every step is 1s 
-STEP_SIZE = 0.2
+STEP_SIZE = 0.1
 
 # missing from target value of shooting, represented by the 
 # standard deviation of shooting angle
