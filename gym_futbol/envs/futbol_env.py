@@ -32,7 +32,7 @@ PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 6
 PLARYER_SPEED_WO_BALL = 9
 GAME_TIME = 40
-GOAL_REWARD = 40000
+GOAL_REWARD = 100000
 BALL_ADV_REWARD_BASE = 7000
 PLAYER_ADV_REWARD_BASE = 5000
 OUT_OF_FIELD_PENALTY = -600
@@ -748,11 +748,12 @@ class FutbolEnv(gym.Env):
             if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and \
             (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
                   # if the ball is moving in front of the players, don't get it back
-                  if self.ball[2] > self.ball[3] and self.ball[2] > 0 and \
-                        self.ball[0] > self.ai_1[0] and self.ball[0] > self.ai_2[0]:
+                  if ball[2] > ball[3] and ball[2] > 0 and \
+                        ball[0] > ai_1[0] and ball[0] > ai_2[0] \
+                              and ball_owner[self.ball_index] == 1:
                         get_ball = -50 * BALL_CONTROL
                   else:
-                        get_ball = 50 * BALL_CONTROL
+                        get_ball = 60 * BALL_CONTROL
             elif (self.ball_owner == BallOwner.AI_1 and ball_owner[self.ai_1_index] == 1) or \
                   (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==1):
                   get_ball = 10 * BALL_CONTROL
