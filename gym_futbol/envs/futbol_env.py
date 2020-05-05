@@ -737,7 +737,13 @@ class FutbolEnv(gym.Env):
                   player_adv_r = 0
 
             defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
-            defence_r = defence * DEFENCE_REWARD_BASE
+            if ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0: 
+                  defence_r = defence * DEFENCE_REWARD_BASE
+            else:
+                  defence_r = -defence * DEFENCE_REWARD_BASE
+
+            defended = self.defence_near(self.ai_1_agent) + self.defence_near(self.ai_2_agent)
+            defended_punish = -defended * DEFENCE_REWARD_BASE
 
             if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
@@ -779,7 +785,7 @@ class FutbolEnv(gym.Env):
 
             else: 
 
-                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r + player_adv_r
+                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r + player_adv_r + defended_punish
 
 
       def _opp_team_set_vector_observation(self):
