@@ -46,7 +46,7 @@ STEP_SIZE = 0.1
 # missing from target value of shooting, represented by the 
 # standard deviation of shooting angle
 NORMAL_MISS = 5
-UNDER_DEFENCE_MISS = 10
+UNDER_DEFENCE_MISS = 15
 
 # maximum intercept success probability
 MAX_INTERCEPT_PROB = 0.9
@@ -345,7 +345,7 @@ class FutbolEnv(gym.Env):
                                     agent_observation[2:4], _ = get_vec(np.array([self.length, target_y]), agent_observation[:2])
                         
                         # with 10% chance, the player drops the ball while running
-                        if random.random() < 0.01:
+                        if random.random() < 0.05:
                               self.ball_owner = BallOwner.NOONE
                         else:
                               self.obs[self.ball_index] = agent_observation
