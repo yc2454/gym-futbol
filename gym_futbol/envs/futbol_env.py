@@ -131,7 +131,7 @@ class FutbolEnv(gym.Env):
                    game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
                    shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
                    one_goal_end = False, action_as_int = True, only_reward_goal = False,
-                   random_opp = True):
+                   random_opp = False):
 
             # constants 
             self.length = length
@@ -345,7 +345,7 @@ class FutbolEnv(gym.Env):
                                     agent_observation[2:4], _ = get_vec(np.array([self.length, target_y]), agent_observation[:2])
                         
                         # with 10% chance, the player drops the ball while running
-                        if random.random() < 0.1:
+                        if random.random() < 0.01:
                               self.ball_owner = BallOwner.NOONE
                         else:
                               self.obs[self.ball_index] = agent_observation
