@@ -741,8 +741,8 @@ class FutbolEnv(gym.Env):
             _, ball_to_ai_1 = get_vec(ball[:2], ai_1[:2])
             _, ball_to_ai_2 = get_vec(ball[:2], ai_2[:2])
             
-            ball_adv = (self.ball[0] - ball[0]) / FIELD_LEN
-            ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
+            # ball_adv = (self.ball[0] - ball[0]) / FIELD_LEN
+            # ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
 
             # player_adv_1 = (self.ai_1[0] - ai_1[0]) / FIELD_LEN
             # player_adv_2 = (self.ai_2[0] - ai_2[0]) / FIELD_LEN
@@ -754,9 +754,13 @@ class FutbolEnv(gym.Env):
             #       player_adv_r = 0
 
             if action1 == Action.run or action2 == Action.run:
-                  player_adv_r = 10 * PLAYER_ADV_REWARD_BASE
+                  running_r = 10 * PLAYER_ADV_REWARD_BASE
             else:
-                  player_adv_r = 0
+                  running_r = 0
+
+            if ball_owner[self.ai_1_index] == 1 and action2 == Action.run or \
+                  ball_owner[self.ai_2_index] == 1 and action1 == Action.run:
+                  player_adv_r = 10 * PLAYER_ADV_REWARD_BASE
 
             if ball_owner[self.ai_1_index] == 0:
                   if action1 == Action.assist or action1 == Action.shoot:
@@ -786,17 +790,17 @@ class FutbolEnv(gym.Env):
 
             bad_action_p = bad_action_p_1 + bad_action_p_2
 
-            defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
-            if ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0: 
-                  defence_r = defence * DEFENCE_REWARD_BASE
-            else:
-                  defence_r = -defence * DEFENCE_REWARD_BASE
+            # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
+            # if ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0: 
+            #       defence_r = defence * DEFENCE_REWARD_BASE
+            # else:
+            #       defence_r = -defence * DEFENCE_REWARD_BASE
 
-            defended = self.defence_near(self.ai_1_agent) + self.defence_near(self.ai_2_agent)
-            if ball_owner[self.ai_1_index] == 1 or ball_owner[self.ai_2_index] == 1: 
-                  defended_p = -defended * DEFENCE_REWARD_BASE
-            else:
-                  defended_p = 0
+            # defended = self.defence_near(self.ai_1_agent) + self.defence_near(self.ai_2_agent)
+            # if ball_owner[self.ai_1_index] == 1 or ball_owner[self.ai_2_index] == 1: 
+            #       defended_p = -defended * DEFENCE_REWARD_BASE
+            # else:
+            #       defended_p = 0
 
             if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
@@ -836,7 +840,7 @@ class FutbolEnv(gym.Env):
                   return score + get_scored
 
             else: 
-                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r + player_adv_r + defended_p + bad_action_p
+                  return get_ball + score + get_scored + out_of_field + bad_action_p + player_adv_r + running_r
 
 
       def _opp_team_set_vector_observation(self):
