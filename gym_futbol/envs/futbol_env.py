@@ -74,12 +74,12 @@ def lock_in(val, max):
             return val
 
 def bigger_than(x1, x2, v):
-      if x1 < v and x2 < v:
+      if x1 <= v and x2 <= v:
             return 2
-      elif x1 > v or x2 > v:
-            return 1
-      else:
+      elif x1 > v and x2 > v:
             return 0
+      else:
+            return 1
 
 # move the [loc] according to [vec]
 def move_by_vec(vec, vec_mag, loc):
@@ -737,6 +737,9 @@ class FutbolEnv(gym.Env):
 
             action1 = actions[0]
             action2 = actions[1]
+
+            _, ball_to_ai_1 = get_vec(ball[:2], ai_1[:2])
+            _, ball_to_ai_2 = get_vec(ball[:2], ai_2[:2])
             
             ball_adv = (self.ball[0] - ball[0]) / FIELD_LEN
             ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
@@ -757,7 +760,9 @@ class FutbolEnv(gym.Env):
 
             if ball_owner[self.ai_1_index] == 0:
                   if action1 == Action.assist or action1 == Action.shoot:
-                        bad_action_p_1 = BAD_ACTION_PENALTY
+                        bad_action_p_1 = 2 * BAD_ACTION_PENALTY
+                  elif ball_to_ai_1 > 2 and action1 == Action.intercept:
+                        bad_action_p_1 = 10 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_1 = 0
             else:
@@ -767,12 +772,14 @@ class FutbolEnv(gym.Env):
                         bad_action_p_1 = 0
 
             if ball_owner[self.ai_2_index] == 0:
-                  if action1 == Action.assist or action1 == Action.shoot:
+                  if action2 == Action.assist or action2 == Action.shoot:
                         bad_action_p_2 = BAD_ACTION_PENALTY
+                  elif ball_to_ai_2 > 2 and action1 == Action.intercept:
+                        bad_action_p_2 = 10 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_2 = 0
             else:
-                  if action1 == Action.intercept:
+                  if action2 == Action.intercept:
                         bad_action_p_2 = BAD_ACTION_PENALTY
                   else:
                         bad_action_p_2 = 0
