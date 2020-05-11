@@ -779,27 +779,27 @@ class FutbolEnv(gym.Env):
 
             if ball_owner[self.ai_1_index] == 0:
                   if action1 == Action.assist or action1 == Action.shoot:
-                        bad_action_p_1 = 2 * BAD_ACTION_PENALTY
+                        bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
                   elif ball_to_ai_1 > 2 and action1 == Action.intercept:
-                        bad_action_p_1 = 10 * BAD_ACTION_PENALTY
+                        bad_action_p_1 = 1000000 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_1 = 0
             else:
                   if action1 == Action.intercept:
-                        bad_action_p_1 = BAD_ACTION_PENALTY
+                        bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_1 = 0
 
             if ball_owner[self.ai_2_index] == 0:
                   if action2 == Action.assist or action2 == Action.shoot:
-                        bad_action_p_2 = BAD_ACTION_PENALTY
+                        bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
                   elif ball_to_ai_2 > 2 and action1 == Action.intercept:
-                        bad_action_p_2 = 10 * BAD_ACTION_PENALTY
+                        bad_action_p_2 = 1000000 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_2 = 0
             else:
                   if action2 == Action.intercept:
-                        bad_action_p_2 = BAD_ACTION_PENALTY
+                        bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_2 = 0
 
