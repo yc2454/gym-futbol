@@ -838,11 +838,6 @@ class FutbolEnv(gym.Env):
             else:
                   get_scored = 0
 
-            print("get ball")
-            print(get_ball)
-            print("bad action")
-            print(bad_action_p)
-
             if self.only_reward_goal:
                   return score + get_scored
 
