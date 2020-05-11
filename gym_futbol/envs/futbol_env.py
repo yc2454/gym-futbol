@@ -735,8 +735,8 @@ class FutbolEnv(gym.Env):
     
       def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner, actions):
 
-            action1 = actions[0]
-            action2 = actions[1]
+            action1 = actions[0][0]
+            action2 = actions[1][0]
 
             _, ball_to_ai_1 = get_vec(ball[:2], ai_1[:2])
             _, ball_to_ai_2 = get_vec(ball[:2], ai_2[:2])
@@ -791,8 +791,6 @@ class FutbolEnv(gym.Env):
                         bad_action_p_2 = 0
 
             bad_action_p = bad_action_p_1 + bad_action_p_2
-
-            print(action1, action2, running_r, bad_action_p)
 
             # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
             # if ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0: 
