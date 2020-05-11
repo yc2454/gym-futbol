@@ -822,7 +822,7 @@ class FutbolEnv(gym.Env):
                   (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==1):
                   get_ball = 30 * BALL_CONTROL
             else:
-                  get_ball = -BALL_CONTROL
+                  get_ball = 0
 
             if self.score() and self.ball[0] >= FIELD_LEN:
                   score = GOAL_REWARD
@@ -837,6 +837,11 @@ class FutbolEnv(gym.Env):
                         print("get scored reward")
             else:
                   get_scored = 0
+
+            print("get ball")
+            print(get_ball)
+            print("bad action")
+            print(bad_action_p)
 
             if self.only_reward_goal:
                   return score + get_scored
