@@ -758,8 +758,8 @@ class FutbolEnv(gym.Env):
             else:
                   running_r = 0
 
-            if ball_owner[self.ai_1_index] == 1 and action2 == Action.run or \
-                  ball_owner[self.ai_2_index] == 1 and action1 == Action.run:
+            if ball_owner[self.ai_1_index] == 10 and action2 == Action.run or \
+                  ball_owner[self.ai_2_index] == 10 and action1 == Action.run:
                   player_adv_r = 10 * PLAYER_ADV_REWARD_BASE
             else:
                   player_adv_r = 0
@@ -814,12 +814,12 @@ class FutbolEnv(gym.Env):
                   # if the ball is moving in front of the players, don't get it back
                   if ball[2] > ball[3] and ball[2] > 0 and \
                         ball[0] > ai_1[0] and ball[0] > ai_2[0] \
-                              and ball_owner[self.ball_index] == 1:
+                              and ball_owner[self.ball_index] == 10:
                         get_ball = -50 * BALL_CONTROL
                   else:
                         get_ball = 60 * BALL_CONTROL
-            elif (self.ball_owner == BallOwner.AI_1 and ball_owner[self.ai_1_index] == 1) or \
-                  (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==1):
+            elif (self.ball_owner == BallOwner.AI_1 and ball_owner[self.ai_1_index] == 10) or \
+                  (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==10):
                   get_ball = 30 * BALL_CONTROL
             else:
                   get_ball = 0
