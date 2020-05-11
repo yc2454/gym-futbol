@@ -761,6 +761,8 @@ class FutbolEnv(gym.Env):
             if ball_owner[self.ai_1_index] == 1 and action2 == Action.run or \
                   ball_owner[self.ai_2_index] == 1 and action1 == Action.run:
                   player_adv_r = 10 * PLAYER_ADV_REWARD_BASE
+            else:
+                  player_adv_r = 0
 
             if ball_owner[self.ai_1_index] == 0:
                   if action1 == Action.assist or action1 == Action.shoot:
