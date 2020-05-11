@@ -732,11 +732,24 @@ class FutbolEnv(gym.Env):
                   else:
                         self.obs[self.ball_owner_array_index][idx] = 0
 
+
+      def int_to_action(self, i):
+            if i == 0:
+                  return Action.run
+            elif i == 1:
+                  return Action.intercept
+            elif i == 2:
+                  return Action.shoot
+            elif i == 3:
+                  return Action.assist
+            else:
+                  print("error!!")
+
     
       def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner, actions):
 
-            action1 = actions[0][0]
-            action2 = actions[1][0]
+            action1 = self.int_to_action(actions[0])
+            action2 = self.int_to_action(actions[1])
 
             _, ball_to_ai_1 = get_vec(ball[:2], ai_1[:2])
             _, ball_to_ai_2 = get_vec(ball[:2], ai_2[:2])
