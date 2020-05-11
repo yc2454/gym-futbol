@@ -46,8 +46,8 @@ STEP_SIZE = 0.1
 
 # missing from target value of shooting, represented by the 
 # standard deviation of shooting angle
-NORMAL_MISS = 5
-UNDER_DEFENCE_MISS = 15
+NORMAL_MISS = 10
+UNDER_DEFENCE_MISS = 20
 
 # maximum intercept success probability
 MAX_INTERCEPT_PROB = 0.9
@@ -791,6 +791,8 @@ class FutbolEnv(gym.Env):
                         bad_action_p_2 = 0
 
             bad_action_p = bad_action_p_1 + bad_action_p_2
+
+            print(action1, action2, running_r, bad_action_p)
 
             # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
             # if ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0: 
