@@ -55,7 +55,7 @@ MAX_INTERCEPT_DIST = 2
 MIN_INTERCEPT_DIST = 1
 
 # deceleration of the ball when it's rolling freely
-DECELERATION = 3.5
+DECELERATION = 0
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
