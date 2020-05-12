@@ -836,10 +836,10 @@ class FutbolEnv(gym.Env):
                               and ball_owner[self.ball_index] == 10:
                         get_ball = -50 * BALL_CONTROL
                   else:
-                        get_ball = 60 * BALL_CONTROL
+                        get_ball = 10 * BALL_CONTROL
             elif (self.ball_owner == BallOwner.AI_1 and ball_owner[self.ai_1_index] == 10) or \
                   (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==10):
-                  get_ball = 30 * BALL_CONTROL
+                  get_ball = 5 * BALL_CONTROL
             else:
                   get_ball = 0
 
