@@ -32,6 +32,7 @@ PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 12
 PLARYER_SPEED_WO_BALL = 14
 GAME_TIME = 40
+<<<<<<< HEAD
 GOAL_REWARD = 1000000
 BALL_ADV_REWARD_BASE = 70000
 PLAYER_ADV_REWARD_BASE = 2500
@@ -39,6 +40,15 @@ OUT_OF_FIELD_PENALTY = -600
 BAD_ACTION_PENALTY = -5000
 BALL_CONTROL = 300
 DEFENCE_REWARD_BASE = 800
+=======
+GOAL_REWARD = 1000
+BALL_ADV_REWARD_BASE = 0.7
+PLAYER_ADV_REWARD_BASE = 0.2
+OUT_OF_FIELD_PENALTY = -0.6
+BAD_ACTION_PENALTY = -0.5
+BALL_CONTROL = 0.3
+DEFENCE_REWARD_BASE = 0.8
+>>>>>>> yc2454
 
 # size of each time step 
 # step_size=1 means every step is 1s 
@@ -55,7 +65,11 @@ MAX_INTERCEPT_DIST = 2
 MIN_INTERCEPT_DIST = 1
 
 # deceleration of the ball when it's rolling freely
+<<<<<<< HEAD
 DECELERATION = 3.5
+=======
+DECELERATION = 0
+>>>>>>> yc2454
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
@@ -169,7 +183,7 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 6),
+            self.observation_space = spaces.Box(low=np.array([[0, 0, -length, -width, 0]] * 6),
                                                 high=np.array([[length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
@@ -329,7 +343,12 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
+<<<<<<< HEAD
                         agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
+=======
+                        # agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
+                        agent_observation[4] = self.player_speed
+>>>>>>> yc2454
 
                         if set_target:
 
@@ -362,7 +381,12 @@ class FutbolEnv(gym.Env):
 
                         accuracy_under_defence = NORMAL_MISS + self.defence_near(agent) * UNDER_DEFENCE_MISS 
 
+<<<<<<< HEAD
                         ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed + 5) * 1.0
+=======
+                        # ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed + 5) * 1.0
+                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed) * 1.0
+>>>>>>> yc2454
 
                         if self.Debug: 
                               print(agent.name + " with ball: shoot")
@@ -480,7 +504,8 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
+                        # agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
+                        agent_observation[4] = self.player_speed
 
                         if set_target:
     
@@ -779,27 +804,47 @@ class FutbolEnv(gym.Env):
 
             if ball_owner[self.ai_1_index] == 0:
                   if action1 == Action.assist or action1 == Action.shoot:
+<<<<<<< HEAD
                         bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
                   elif ball_to_ai_1 > 2 and action1 == Action.intercept:
                         bad_action_p_1 = 1000000 * BAD_ACTION_PENALTY
+=======
+                        bad_action_p_1 = 2 * BAD_ACTION_PENALTY
+                  elif ball_to_ai_1 > 2 and action1 == Action.intercept:
+                        bad_action_p_1 = 1 * BAD_ACTION_PENALTY
+>>>>>>> yc2454
                   else:
                         bad_action_p_1 = 0
             else:
                   if action1 == Action.intercept:
+<<<<<<< HEAD
                         bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
+=======
+                        bad_action_p_1 = 2 * BAD_ACTION_PENALTY
+>>>>>>> yc2454
                   else:
                         bad_action_p_1 = 0
 
             if ball_owner[self.ai_2_index] == 0:
                   if action2 == Action.assist or action2 == Action.shoot:
+<<<<<<< HEAD
                         bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
                   elif ball_to_ai_2 > 2 and action1 == Action.intercept:
                         bad_action_p_2 = 1000000 * BAD_ACTION_PENALTY
+=======
+                        bad_action_p_2 = 2 * BAD_ACTION_PENALTY
+                  elif ball_to_ai_2 > 2 and action1 == Action.intercept:
+                        bad_action_p_2 = 1 * BAD_ACTION_PENALTY
+>>>>>>> yc2454
                   else:
                         bad_action_p_2 = 0
             else:
                   if action2 == Action.intercept:
+<<<<<<< HEAD
                         bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
+=======
+                        bad_action_p_2 = 2 * BAD_ACTION_PENALTY
+>>>>>>> yc2454
                   else:
                         bad_action_p_2 = 0
 
