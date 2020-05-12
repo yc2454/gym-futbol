@@ -169,7 +169,7 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 6),
+            self.observation_space = spaces.Box(low=np.array([[0, 0, -length, -width, 0]] * 6),
                                                 high=np.array([[length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
                                                       [length, width, length, width, player_speed],
@@ -329,7 +329,8 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
+                        # agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
+                        agent_observation[4] = self.player_speed
 
                         if set_target:
 
@@ -362,7 +363,8 @@ class FutbolEnv(gym.Env):
 
                         accuracy_under_defence = NORMAL_MISS + self.defence_near(agent) * UNDER_DEFENCE_MISS 
 
-                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed + 5) * 1.0
+                        # ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed + 5) * 1.0
+                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed) * 1.0
 
                         if self.Debug: 
                               print(agent.name + " with ball: shoot")
@@ -480,7 +482,8 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
+                        # agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
+                        agent_observation[4] = self.player_speed
 
                         if set_target:
     
