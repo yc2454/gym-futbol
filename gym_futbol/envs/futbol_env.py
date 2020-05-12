@@ -32,13 +32,13 @@ PASS_SPEED = 10
 PLARYER_SPEED_W_BALL = 12
 PLARYER_SPEED_WO_BALL = 14
 GAME_TIME = 40
-GOAL_REWARD = 1000000
-BALL_ADV_REWARD_BASE = 70000
-PLAYER_ADV_REWARD_BASE = 2500
-OUT_OF_FIELD_PENALTY = -600
-BAD_ACTION_PENALTY = -5000
-BALL_CONTROL = 300
-DEFENCE_REWARD_BASE = 800
+GOAL_REWARD = 1000
+BALL_ADV_REWARD_BASE = 0.7
+PLAYER_ADV_REWARD_BASE = 0.2
+OUT_OF_FIELD_PENALTY = -0.6
+BAD_ACTION_PENALTY = -0.5
+BALL_CONTROL = 0.3
+DEFENCE_REWARD_BASE = 0.8
 
 # size of each time step 
 # step_size=1 means every step is 1s 
@@ -779,27 +779,27 @@ class FutbolEnv(gym.Env):
 
             if ball_owner[self.ai_1_index] == 0:
                   if action1 == Action.assist or action1 == Action.shoot:
-                        bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
+                        bad_action_p_1 = 2 * BAD_ACTION_PENALTY
                   elif ball_to_ai_1 > 2 and action1 == Action.intercept:
-                        bad_action_p_1 = 1000000 * BAD_ACTION_PENALTY
+                        bad_action_p_1 = 1 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_1 = 0
             else:
                   if action1 == Action.intercept:
-                        bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
+                        bad_action_p_1 = 2 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_1 = 0
 
             if ball_owner[self.ai_2_index] == 0:
                   if action2 == Action.assist or action2 == Action.shoot:
-                        bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
+                        bad_action_p_2 = 2 * BAD_ACTION_PENALTY
                   elif ball_to_ai_2 > 2 and action1 == Action.intercept:
-                        bad_action_p_2 = 1000000 * BAD_ACTION_PENALTY
+                        bad_action_p_2 = 1 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_2 = 0
             else:
                   if action2 == Action.intercept:
-                        bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
+                        bad_action_p_2 = 2 * BAD_ACTION_PENALTY
                   else:
                         bad_action_p_2 = 0
 
