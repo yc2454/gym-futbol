@@ -779,9 +779,11 @@ class FutbolEnv(gym.Env):
             else:
                   running_r = 0
 
-            if action1 == Action.assist and ai_2[0] - ai_1[0] > 5:
+            if action1 == Action.assist and ai_2[0] - ai_1[0] > 5 and \
+                  ai_2[0] > opp_1[0] and ai_2[0] > opp_2[0]:
                   assist_r = ASSIST_REWARD
-            elif action2 == Action.assist and ai_1[0] - ai_2[0] > 5:
+            elif action2 == Action.assist and ai_1[0] - ai_2[0] > 5 and \
+                  ai_1[0] > opp_1[0] and ai_1[0] > opp_2[0]:
                   assist_r = ASSIST_REWARD
             else:
                   assist_r = 0
