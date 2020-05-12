@@ -29,29 +29,33 @@ PRESSURE_RANGE = 2
 
 SHOOT_SPEED = 20
 PASS_SPEED = 10
-PLARYER_SPEED_W_BALL = 6
-PLARYER_SPEED_WO_BALL = 9
+PLARYER_SPEED_W_BALL = 12
+PLARYER_SPEED_WO_BALL = 14
 GAME_TIME = 40
-GOAL_REWARD = 2000
-BALL_ADV_REWARD_BASE = 700
-PLAYER_ADV_REWARD_BASE = 1500
+GOAL_REWARD = 1000000
+BALL_ADV_REWARD_BASE = 70000
+PLAYER_ADV_REWARD_BASE = 2500
 OUT_OF_FIELD_PENALTY = -600
+BAD_ACTION_PENALTY = -5000
 BALL_CONTROL = 300
 DEFENCE_REWARD_BASE = 800
 
 # size of each time step 
 # step_size=1 means every step is 1s 
-STEP_SIZE = 0.2
+STEP_SIZE = 0.1
 
 # missing from target value of shooting, represented by the 
 # standard deviation of shooting angle
-NORMAL_MISS = 5
-UNDER_DEFENCE_MISS = 10
+NORMAL_MISS = 10
+UNDER_DEFENCE_MISS = 20
 
 # maximum intercept success probability
 MAX_INTERCEPT_PROB = 0.9
 MAX_INTERCEPT_DIST = 2
 MIN_INTERCEPT_DIST = 1
+
+# deceleration of the ball when it's rolling freely
+DECELERATION = 3.5
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
@@ -70,12 +74,12 @@ def lock_in(val, max):
             return val
 
 def bigger_than(x1, x2, v):
-      if x1 < v and x2 < v:
+      if x1 <= v and x2 <= v:
             return 2
-      elif x1 > v or x2 > v:
-            return 1
-      else:
+      elif x1 > v and x2 > v:
             return 0
+      else:
+            return 1
 
 # move the [loc] according to [vec]
 def move_by_vec(vec, vec_mag, loc):
@@ -131,7 +135,7 @@ class FutbolEnv(gym.Env):
                    game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
                    shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
                    one_goal_end = False, action_as_int = True, only_reward_goal = False,
-                   random_opp = True):
+                   random_opp = False):
 
             # constants 
             self.length = length
@@ -325,7 +329,7 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed)
+                        agent_observation[4] = 1.0 * random.randint(self.player_speed - 4, self.player_speed + 2)
 
                         if set_target:
 
@@ -345,7 +349,7 @@ class FutbolEnv(gym.Env):
                                     agent_observation[2:4], _ = get_vec(np.array([self.length, target_y]), agent_observation[:2])
                         
                         # with 10% chance, the player drops the ball while running
-                        if random.random() < 0.1:
+                        if random.random() < 0.05:
                               self.ball_owner = BallOwner.NOONE
                         else:
                               self.obs[self.ball_index] = agent_observation
@@ -358,7 +362,7 @@ class FutbolEnv(gym.Env):
 
                         accuracy_under_defence = NORMAL_MISS + self.defence_near(agent) * UNDER_DEFENCE_MISS 
 
-                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed) * 1.0
+                        ball_observation[4] = random.randint(self.shoot_speed - 16, self.shoot_speed + 5) * 1.0
 
                         if self.Debug: 
                               print(agent.name + " with ball: shoot")
@@ -454,7 +458,7 @@ class FutbolEnv(gym.Env):
                               intercept_chance(ball_to_agent_magnitude, MIN_INTERCEPT_DIST, MAX_INTERCEPT_DIST)
 
                         if intercept_success or \
-                              (self.ball_owner == BallOwner.NOONE and ball_to_agent_magnitude < MAX_INTERCEPT_DIST + 3): 
+                              (self.ball_owner == BallOwner.NOONE and ball_to_agent_magnitude < MAX_INTERCEPT_DIST + 2): 
 
                               ball_observation[2:5] = agent_observation[2:5]
                               ball_observation[:2] = agent_observation[:2]
@@ -550,8 +554,7 @@ class FutbolEnv(gym.Env):
 
       # move the [loc] according to [vec]
       # notice the STEP_SIZE
-      def _step_by_observation(self, observation):
-
+      def _step_by_observation(self, observation, is_ball=False):
             tx, ty = observation[2:4]
             vec_mag = math.sqrt(tx**2 + ty**2)
 
@@ -560,6 +563,9 @@ class FutbolEnv(gym.Env):
             else:
                   observation[0] += observation[4] * (tx * STEP_SIZE / vec_mag)
                   observation[1] += observation[4] * (ty * STEP_SIZE / vec_mag)
+
+            if is_ball and self.ball_owner == BallOwner.NOONE:
+                  observation[4] -= DECELERATION * STEP_SIZE
 
             
       def out(self, obj):
@@ -646,10 +652,15 @@ class FutbolEnv(gym.Env):
             self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
             self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
 
-            self._step_vector_observations(self.obs)
+            ### changed
+            # use the old step vector function for the players who
+            # doesn't decelerate
+            self._step_vector_observations(self.obs[0:4])
+            # use deceleration step function for ball
+            self._step_by_observation(self.obs[4], is_ball=True)
 
             # calculate reward
-            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
+            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a, ai_action_type)
 
             done = False
 
@@ -721,28 +732,110 @@ class FutbolEnv(gym.Env):
                   else:
                         self.obs[self.ball_owner_array_index][idx] = 0
 
+
+      def int_to_action(self, i):
+            if i == 0:
+                  return Action.run
+            elif i == 1:
+                  return Action.intercept
+            elif i == 2:
+                  return Action.shoot
+            elif i == 3:
+                  return Action.assist
+            else:
+                  print("error!!")
+
     
-      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner):
+      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner, actions):
 
-            ball_adv = self.ball[0] - ball[0]
-            ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
+            action1 = self.int_to_action(actions[0])
+            action2 = self.int_to_action(actions[1])
 
-            # player_adv = self.ai_1[0] - ai_1[0] + self.ai_2[0] - ai_2[0]
+            _, ball_to_ai_1 = get_vec(ball[:2], ai_1[:2])
+            _, ball_to_ai_2 = get_vec(ball[:2], ai_2[:2])
+            
+            # ball_adv = (self.ball[0] - ball[0]) / FIELD_LEN
+            # ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
 
-            defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
-            defence_r = defence * DEFENCE_REWARD_BASE
+            # player_adv_1 = (self.ai_1[0] - ai_1[0]) / FIELD_LEN
+            # player_adv_2 = (self.ai_2[0] - ai_2[0]) / FIELD_LEN
+
+            # if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+            #       player_adv_r = player_adv_2 * PLAYER_ADV_REWARD_BASE \
+            #       + player_adv_1 * PLAYER_ADV_REWARD_BASE
+            # else:
+            #       player_adv_r = 0
+
+            if action1 == Action.run or action2 == Action.run:
+                  running_r = 10 * PLAYER_ADV_REWARD_BASE
+            else:
+                  running_r = 0
+
+            if ball_owner[self.ai_1_index] == 10 and action2 == Action.run or \
+                  ball_owner[self.ai_2_index] == 10 and action1 == Action.run:
+                  player_adv_r = 10 * PLAYER_ADV_REWARD_BASE
+            else:
+                  player_adv_r = 0
+
+            if ball_owner[self.ai_1_index] == 0:
+                  if action1 == Action.assist or action1 == Action.shoot:
+                        bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
+                  elif ball_to_ai_1 > 2 and action1 == Action.intercept:
+                        bad_action_p_1 = 1000000 * BAD_ACTION_PENALTY
+                  else:
+                        bad_action_p_1 = 0
+            else:
+                  if action1 == Action.intercept:
+                        bad_action_p_1 = 2000000 * BAD_ACTION_PENALTY
+                  else:
+                        bad_action_p_1 = 0
+
+            if ball_owner[self.ai_2_index] == 0:
+                  if action2 == Action.assist or action2 == Action.shoot:
+                        bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
+                  elif ball_to_ai_2 > 2 and action1 == Action.intercept:
+                        bad_action_p_2 = 1000000 * BAD_ACTION_PENALTY
+                  else:
+                        bad_action_p_2 = 0
+            else:
+                  if action2 == Action.intercept:
+                        bad_action_p_2 = 2000000 * BAD_ACTION_PENALTY
+                  else:
+                        bad_action_p_2 = 0
+
+            bad_action_p = bad_action_p_1 + bad_action_p_2
+
+            # defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
+            # if ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0: 
+            #       defence_r = defence * DEFENCE_REWARD_BASE
+            # else:
+            #       defence_r = -defence * DEFENCE_REWARD_BASE
+
+            # defended = self.defence_near(self.ai_1_agent) + self.defence_near(self.ai_2_agent)
+            # if ball_owner[self.ai_1_index] == 1 or ball_owner[self.ai_2_index] == 1: 
+            #       defended_p = -defended * DEFENCE_REWARD_BASE
+            # else:
+            #       defended_p = 0
 
             if self.out(self.ai_1) or self.out(self.ai_2):
                   out_of_field = OUT_OF_FIELD_PENALTY
             else:
                   out_of_field = 0
 
-            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
-                  get_ball = 10 * BALL_CONTROL
-            elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
-                  get_ball = BALL_CONTROL
+            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and \
+            (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
+                  # if the ball is moving in front of the players, don't get it back
+                  if ball[2] > ball[3] and ball[2] > 0 and \
+                        ball[0] > ai_1[0] and ball[0] > ai_2[0] \
+                              and ball_owner[self.ball_index] == 10:
+                        get_ball = -50 * BALL_CONTROL
+                  else:
+                        get_ball = 60 * BALL_CONTROL
+            elif (self.ball_owner == BallOwner.AI_1 and ball_owner[self.ai_1_index] == 10) or \
+                  (self.ball_owner == BallOwner.AI_2 and ball_owner[self.ai_2_index] ==10):
+                  get_ball = 30 * BALL_CONTROL
             else:
-                  get_ball = -BALL_CONTROL
+                  get_ball = 0
 
             if self.score() and self.ball[0] >= FIELD_LEN:
                   score = GOAL_REWARD
@@ -759,12 +852,10 @@ class FutbolEnv(gym.Env):
                   get_scored = 0
 
             if self.only_reward_goal:
-    
                   return score + get_scored
 
             else: 
-
-                  return get_ball + score + get_scored + out_of_field + ball_adv_r + defence_r
+                  return get_ball + score + get_scored + out_of_field + bad_action_p + player_adv_r + running_r
 
 
       def _opp_team_set_vector_observation(self):
