@@ -40,6 +40,8 @@ BAD_ACTION_PENALTY = -0.5
 BALL_CONTROL = 0.3
 DEFENCE_REWARD_BASE = 0.8
 STRATEGIC_RUN_BASE = 1
+ASSIST_REWARD = 1
+SHOOT_REWARD = 1
 
 # size of each time step 
 # step_size=1 means every step is 1s 
@@ -777,6 +779,20 @@ class FutbolEnv(gym.Env):
             else:
                   running_r = 0
 
+            if action1 == Action.assist and ai_2[0] - ai_1[0] > 5:
+                  assist_r = ASSIST_REWARD
+            elif action2 == Action.assist and ai_1[0] - ai_2[0] > 5:
+                  assist_r = ASSIST_REWARD
+            else:
+                  assist_r = 0
+
+            if action1 == Action.shoot and ai_1[0] >= 85 and ball_owner[self.ai_1_index] == 10:
+                  shoot_r = SHOOT_REWARD
+            elif action2 == Action.shoot and ai_2[0] >= 85 and ball_owner[self.ai_2_index] == 10:
+                  shoot_r = SHOOT_REWARD
+            else:
+                  shoot_r = 0
+
             if ball_owner[self.ai_1_index] == 10 and action2 == Action.run or \
                   ball_owner[self.ai_2_index] == 10 and action1 == Action.run:
                   player_adv_r = 10 * PLAYER_ADV_REWARD_BASE
@@ -879,7 +895,9 @@ class FutbolEnv(gym.Env):
                   return score + get_scored
 
             else: 
-                  return get_ball + score + get_scored + out_of_field + bad_action_p + player_adv_r + running_r + defended_p + strategic_run_r
+                  return get_ball + score + get_scored + out_of_field + bad_action_p + \
+                        player_adv_r + running_r + defended_p + strategic_run_r + \
+                              shoot_r + assist_r
 
 
       def _opp_team_set_vector_observation(self):
