@@ -60,7 +60,7 @@ def get_vec(coor_t, coor_o):
       vec_mag = math.sqrt(vec[0]**2 + vec[1]**2)
       return vec, vec_mag
 
-# fix the coordinated in the range [0, max]
+# fix coordinates in the range [0, max]
 def lock_in(val, max):
       if val < 0:
             return 0
