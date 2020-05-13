@@ -428,28 +428,28 @@ class FutbolEnv(gym.Env):
                         if self.Debug: 
                               print(agent.name + " with ball: pass")
 
-                        # figure out who the teammate is
+                        # figure out who the teammate is TODO: this is dummy code
                         if agent.name == 'opp_1': # 0
-                            
+                            mate = self.opp_2
                         elif agent.name == 'opp_2': # 1
-                            
+                            mate = self.opp_3
                         elif agent.name == 'opp_3': # 2
-                            
+                            mate = self.opp_4
                         elif agent.name == 'opp_4': # 3
-                            
+                            mate = self.opp_5
                         elif agent.name == 'opp_4': # 3
-                            
+                            mate = self.opp_1
                         
                         elif agent.name == 'ai_1':
-                              
+                            mate = self.ai_2
                         elif agent.name == 'ai_2':
-                        
+                            mate = self.ai_3
                         elif agent.name == 'ai_3':
-                              
+                            mate = self.ai_4
                         elif agent.name == 'ai_4':
-                        
+                            mate = self.ai_5
                         elif agent.name == 'ai_5':
-                              
+                            mate = self.ai_1
             
                         # mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
 
