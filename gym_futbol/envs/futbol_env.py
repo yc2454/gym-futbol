@@ -53,6 +53,8 @@ MAX_INTERCEPT_PROB = 0.9
 MAX_INTERCEPT_DIST = 2
 MIN_INTERCEPT_DIST = 1
 
+
+
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
 def get_vec(coor_t, coor_o):
@@ -69,13 +71,8 @@ def lock_in(val, max):
       else:
             return val
 
-def bigger_than(x1, x2, v):
-      if x1 < v and x2 < v:
-            return 2
-      elif x1 > v or x2 > v:
-            return 1
-      else:
-            return 0
+def bigger_than(listy, v):
+    return len(list(filter(lambda x: v > x, listy)))
 
 # move the [loc] according to [vec]
 def move_by_vec(vec, vec_mag, loc):
@@ -146,7 +143,7 @@ class FutbolEnv(gym.Env):
             self.Debug = Debug
 
             # data structure to contain the 3 actions
-            self.action_space = spaces.Tuple((spaces.Discrete(4), spaces.Discrete(4)))
+            self.action_space = spaces.Tuple( (spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4)) )
 
             # data structure to contain observations the agent would make in one step
             # the 5 values in the array represents: 
@@ -155,23 +152,37 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0]] * 6),
-                                                high=np.array([[length, width, length, width, player_speed],
-                                                      [length, width, length, width, player_speed],
-                                                      [length, width, length, width, player_speed],
-                                                      [length, width, length, width, player_speed],
-                                                      [length, width, length, width, shoot_speed],
-                                                      [10, 10, 10, 10, 10]]),
+            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0, 0]] * 11),
+                                                high=np.array([
+                                                      [length, width, length, width, player_speed, 10], # p1t1
+                                                      [length, width, length, width, player_speed, 10], # p2t1
+                                                      [length, width, length, width, player_speed, 10], # p3t1
+                                                      [length, width, length, width, player_speed, 10], # p4t1
+                                                      [length, width, length, width, player_speed, 10], # p5t1
+                                                      [length, width, length, width, player_speed, 10], # p1t2
+                                                      [length, width, length, width, player_speed, 10], # p2t2
+                                                      [length, width, length, width, player_speed, 10], # p3t2
+                                                      [length, width, length, width, player_speed, 10], # p4t2
+                                                      [length, width, length, width, player_speed, 10], # p5t2
+                                                      [length, width, length, width, shoot_speed,  666] # ball
+                                                      ]),
                                                 dtype=np.float64)
 
 
             ### moved some parameter out of reset()
             self.ai_1_index = 0
             self.ai_2_index = 1
-            self.opp_1_index = 2
-            self.opp_2_index = 3
-            self.ball_index = 4
-            self.ball_owner_array_index = 5
+            self.ai_3_index = 2
+            self.ai_4_index = 3
+            self.ai_5_index = 4
+            
+            self.opp_1_index = 5
+            self.opp_2_index = 6
+            self.opp_3_index = 7
+            self.opp_4_index = 8
+            self.opp_5_index = 9
+            self.ball_index = 10
+            self.ball_owner_array_index = 11
             
             self.obs = self.reset()
 
@@ -179,12 +190,22 @@ class FutbolEnv(gym.Env):
             self.time = 0
 
              # opp easy agent 1
-            self.opp_1_agent = Easy_Agent('opp_1', self.obs, self.opp_1_index, self.opp_2_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.opp_2_agent = Easy_Agent('opp_2', self.obs, self.opp_2_index, self.opp_1_index, self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.opp_1_agent = Easy_Agent('opp_1', self.obs, self.opp_1_index, [6,7,8,9], self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            
+            self.opp_2_agent = Easy_Agent('opp_2', self.obs, self.opp_2_index, [5,7,8,9], self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_2), self.length, self.width, self.goal_size, shoot_range = 20)
+            
+            self.opp_3_agent = Easy_Agent('opp_3', self.obs, self.opp_3_index, [5,6,8,9], self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_3), self.length, self.width, self.goal_size, shoot_range = 20)
+            
+            self.opp_4_agent = Easy_Agent('opp_4', self.obs, self.opp_4_index, [5,6,7,9], self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_4), self.length, self.width, self.goal_size, shoot_range = 20)
+            
+            self.opp_5_agent = Easy_Agent('opp_5', self.obs, self.opp_5_index, [5,6,7,8], self.ball_index, 'right', (self.ball_owner == BallOwner.OPP_5), self.length, self.width, self.goal_size, shoot_range = 20)
 
             # ai easy agent
-            self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, self.ai_2_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_1), self.length, self.width, self.goal_size, shoot_range = 20)
-            self.ai_2_agent = Easy_Agent('ai_2', self.obs, self.ai_2_index, self.ai_1_index, self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_1_agent = Easy_Agent('ai_1', self.obs, self.ai_1_index, [1,2,3,4], self.ball_index, 'left', (self.ball_owner == BallOwner.AI_1), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_2_agent = Easy_Agent('ai_2', self.obs, self.ai_2_index, [0,2,3,4], self.ball_index, 'left', (self.ball_owner == BallOwner.AI_2), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_3_agent = Easy_Agent('ai_3', self.obs, self.ai_3_index, [0,1,3,4], self.ball_index, 'left', (self.ball_owner == BallOwner.AI_3), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_4_agent = Easy_Agent('ai_4', self.obs, self.ai_4_index, [0,1,2,4], self.ball_index, 'left', (self.ball_owner == BallOwner.AI_4), self.length, self.width, self.goal_size, shoot_range = 20)
+            self.ai_5_agent = Easy_Agent('ai_5', self.obs, self.ai_5_index, [0,1,2,3], self.ball_index, 'left', (self.ball_owner == BallOwner.AI_5), self.length, self.width, self.goal_size, shoot_range = 20)
             
             
       # Reset the state of the environment to an initial state
@@ -196,24 +217,40 @@ class FutbolEnv(gym.Env):
             # position and movement of the ball
             self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
             # position and movement of the first AI player
-            self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0])
-            # position and movement of the first AI player
-            self.ai_2 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 - 5, 0, 0, 0])
+            self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
+            # position and movement of the rest of AI players
+            self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+            self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+            self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+            self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+            
             # position and movement of the first opponent player
             self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
-            # position and movement of the first opponent player
-            self.opp_2 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 - 5, 0, 0, 0])
-            # array representing who has the ball
-            # index 0-5 represents ai 1, ai 2, opp 1, opp 2, no one, respectively
-            # value 0 means doesn't have ball, 10 means have ball
-            self.ball_owner_array = np.array([0, 0, 0, 0, 0])
+            # position and movement of the rest of the opponent players
+            self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+            self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+            self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+            self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
             
-            self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball, self.ball_owner_array)).reshape((6, 5))
+            # array representing who has the ball
+            # index 0-10 represents players, no one, respectively
+            # value 0 means doesn't have ball, 10 means have ball
+            self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            
+            self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5 self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball, self.ball_owner_array)).reshape((12, 6)) # change the reshape when theres diff #s of players
 
             self.ai_1 = self.obs[self.ai_1_index]
             self.ai_2 = self.obs[self.ai_2_index]
+            self.ai_3 = self.obs[self.ai_3_index]
+            self.ai_4 = self.obs[self.ai_4_index]
+            self.ai_5 = self.obs[self.ai_5_index]
+            
             self.opp_1 = self.obs[self.opp_1_index]
             self.opp_2 = self.obs[self.opp_2_index]
+            self.opp_3 = self.obs[self.opp_3_index]
+            self.opp_4 = self.obs[self.opp_4_index]
+            self.opp_5 = self.obs[self.opp_5_index]
+            
             self.ball = self.obs[self.ball_index]
             self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
@@ -247,14 +284,26 @@ class FutbolEnv(gym.Env):
             # ai
             ai_1_x, ai_1_y, _, _, _ = self.obs[self.ai_1_index]
             ai_2_x, ai_2_y, _, _, _ = self.obs[self.ai_2_index]
+            ai_3_x, ai_3_y, _, _, _ = self.obs[self.ai_3_index]
+            ai_4_x, ai_4_y, _, _, _ = self.obs[self.ai_4_index]
+            ai_5_x, ai_5_y, _, _, _ = self.obs[self.ai_5_index]
             ax.plot(ai_1_x,ai_1_y, color = 'red', marker='o', markersize=12, label='ai')
             ax.plot(ai_2_x,ai_2_y, color = 'red', marker='o', markersize=12, label='ai')
+            ax.plot(ai_3_x,ai_3_y, color = 'red', marker='o', markersize=12, label='ai')
+            ax.plot(ai_4_x,ai_4_y, color = 'red', marker='o', markersize=12, label='ai')
+            ax.plot(ai_5_x,ai_5_y, color = 'red', marker='o', markersize=12, label='ai')
 
             # opp
             opp_1_x, opp_1_y, _, _, _ = self.obs[self.opp_1_index]
             opp_2_x, opp_2_y, _, _, _ = self.obs[self.opp_2_index]
+            opp_3_x, opp_3_y, _, _, _ = self.obs[self.opp_3_index]
+            opp_4_x, opp_4_y, _, _, _ = self.obs[self.opp_4_index]
+            opp_5_x, opp_5_y, _, _, _ = self.obs[self.opp_5_index]
             ax.plot(opp_1_x, opp_1_y, color = 'blue', marker='o', markersize=12, label='opp')
             ax.plot(opp_2_x, opp_2_y, color = 'blue', marker='o', markersize=12, label='opp')
+            ax.plot(opp_3_x, opp_3_y, color = 'blue', marker='o', markersize=12, label='opp')
+            ax.plot(opp_4_x, opp_4_y, color = 'blue', marker='o', markersize=12, label='opp')
+            ax.plot(opp_5_x, opp_5_y, color = 'blue', marker='o', markersize=12, label='opp')
             # ball
             ball_x, ball_y, _, _, _ = self.obs[self.ball_index]
             ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
@@ -268,11 +317,19 @@ class FutbolEnv(gym.Env):
             if agent.team == 'left':
                   _, o1_dis = get_vec(self.opp_1[:2], agent.agent_observation[:2])
                   _, o2_dis = get_vec(self.opp_2[:2], agent.agent_observation[:2])
-                  return bigger_than(o1_dis, o2_dis, 2)
+                  _, o3_dis = get_vec(self.opp_3[:2], agent.agent_observation[:2])
+                  _, o4_dis = get_vec(self.opp_4[:2], agent.agent_observation[:2])
+                  _, o5_dis = get_vec(self.opp_5[:2], agent.agent_observation[:2])
+                  opp_distances = [o1_dis, o2_dis, o3_dis, o4_dis, o5_dis]
+                  return bigger_than(opp_distances, 2)
             else:
                   _, a1_dis = get_vec(self.ai_1[:2], agent.agent_observation[:2])
                   _, a2_dis = get_vec(self.ai_2[:2], agent.agent_observation[:2])
-                  return bigger_than(a1_dis, a2_dis, 2)
+                  _, a3_dis = get_vec(self.ai_3[:2], agent.agent_observation[:2])
+                  _, a4_dis = get_vec(self.ai_4[:2], agent.agent_observation[:2])
+                  _, a5_dis = get_vec(self.ai_5[:2], agent.agent_observation[:2])
+                  ag_distances = [a1_dis, a2_dis, a3_dis, a4_dis, a5_dis]
+                  return bigger_than(ag_distances, 2)
 
 
       # set agent's vector observation based on action_type, and ball owner
@@ -372,14 +429,27 @@ class FutbolEnv(gym.Env):
                               print(agent.name + " with ball: pass")
 
                         # figure out who the teammate is
-                        if agent.name == 'opp_1':
-                              mate = self.opp_2
-                        elif agent.name == 'opp_2':
-                              mate = self.opp_1
+                        if agent.name == 'opp_1': # 0
+                            
+                        elif agent.name == 'opp_2': # 1
+                            
+                        elif agent.name == 'opp_3': # 2
+                            
+                        elif agent.name == 'opp_4': # 3
+                            
+                        elif agent.name == 'opp_4': # 3
+                            
+                        
                         elif agent.name == 'ai_1':
-                              mate = self.ai_2
-                        else:
-                              mate = self.ai_1
+                              
+                        elif agent.name == 'ai_2':
+                        
+                        elif agent.name == 'ai_3':
+                              
+                        elif agent.name == 'ai_4':
+                        
+                        elif agent.name == 'ai_5':
+                              
             
                         # mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
 
