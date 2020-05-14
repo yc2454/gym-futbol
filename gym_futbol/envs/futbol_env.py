@@ -1120,19 +1120,25 @@ class FutbolEnv(gym.Env):
                             # person furthest to the goal runs to defend the goal?? TODO: is that right?
                             defence_point = [self.length * 0.75, self.width * 0.5]
                             
+                            dict = {self.opp_1: 0, self.opp_2: 1, self.opp_3: 2, self.opp_4: 3, self.opp_5: 4}
+                            
                             x_coors = [self.opp_1[0], self.opp_2[0], self.opp_3[0], self.opp_4[0], self.opp_5[0]]
                             opponents = [self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5]
                             action_types = [opp1_action_type, opp2_action_type, opp3_action_type, opp4_action_type, opp5_action_type]
                             set_targets = [opp1_set_target, opp2_set_target, opp3_set_target, opp4_set_target, opp5_set_target]
                             targets = [opp1_target, opp2_target, opp3_target, opp4_target, opp5_target]
                             
-#                            x_coors, opponents, action_types, set_targets, targets = (list(t) for t in zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets))))
+#                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
+            
+                            x_coors, opponents, action_types, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, targets), reverse=True)))
                             
-                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
+                            exec("%s = %d" % (x,2))
                             
                             action_types[0] = 0 # run
-                            set_targets[0] = True
-                            targets[0], _ = get_vec(defence_point, opponents[num_players-1])
+#                            set_targets[0] = True
+                            number = dict[opponents[0]]
+                            set_targets[number] = True
+                            targets[0], _ = get_vec(defence_point, opponents[0])
 
 
             self.obs[self.opp_1_agent.agent_index] = self._set_vector_observation(self.opp_1_agent, 
