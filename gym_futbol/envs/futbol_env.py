@@ -716,7 +716,7 @@ class FutbolEnv(gym.Env):
 
       # move the [loc] according to [vec]
       # notice the STEP_SIZE
-      def _step_by_observation(self, observation):
+      def _step_by_observation(self, observation, is_ball=False):
 
             tx, ty = observation[2:4]
             vec_mag = math.sqrt(tx**2 + ty**2)
