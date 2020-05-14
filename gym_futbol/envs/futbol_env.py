@@ -1130,14 +1130,18 @@ class FutbolEnv(gym.Env):
                             
 #                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
             
-                            x_coors, opponents, action_types, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, targets), reverse=True)))
-                            
-                            exec("%s = %d" % (x,2))
+                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(\
+                            x_coors,\
+                            opponents,\
+                            action_types,\
+                            set_targets, \
+                            targets),\
+                            reverse=True)))
                             
                             action_types[0] = 0 # run
-#                            set_targets[0] = True
-                            number = dict[opponents[0]]
-                            set_targets[number] = True
+                            set_targets[0] = True
+#                            number = dict[opponents[0]]
+#                            set_targets[number] = True
                             targets[0], _ = get_vec(defence_point, opponents[0])
 
 
