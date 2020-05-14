@@ -56,7 +56,7 @@ MIN_INTERCEPT_DIST = 1
 
 def base_convert(i, b):
     if type(i) == tuple:
-        return i
+        return list(i)
     
     result = []
     while i > 0:
