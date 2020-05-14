@@ -174,7 +174,7 @@ class FutbolEnv(gym.Env):
             # [2]: target x coor - object x coor
             # [3]: target y coor - object y coor
             # [4]: speed magnitude
-            self.observation_space = spaces.Box(low=np.array([[0, 0, 0, 0, 0, 0]] * 11),
+            self.observation_space = spaces.Box(low=np.array([[0, 0, -length, -width, 0, 0]] * 11),
                                                 high=np.array([
                                                       [length, width, length, width, player_speed, 10], # p1t1
                                                       [length, width, length, width, player_speed, 10], # p2t1
