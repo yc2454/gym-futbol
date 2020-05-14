@@ -237,7 +237,7 @@ class FutbolEnv(gym.Env):
             # value 0 means doesn't have ball, 10 means have ball
             self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
             
-            self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball, self.ball_owner_array)).reshape((12, 6)) # change the reshape when theres diff #s of players
+            self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball)).reshape((11, 6)) # change the reshape when theres diff #s of players
             self.ai_1 = self.obs[self.ai_1_index]
             self.ai_2 = self.obs[self.ai_2_index]
             self.ai_3 = self.obs[self.ai_3_index]
@@ -810,7 +810,7 @@ class FutbolEnv(gym.Env):
                   
                   self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
                   
-                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball, self.ball_owner_array)).reshape((12, 6))
+                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball)).reshape((11, 6))
                   
                   self.ball_owner = BallOwner.NOONE
                   self.last_ball_owner = BallOwner.NOONE
