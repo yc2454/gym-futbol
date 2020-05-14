@@ -55,6 +55,8 @@ MIN_INTERCEPT_DIST = 1
 
 
 def base_convert(i, b):
+    if type(i) == tuple:
+        return i
     
     result = []
     while i > 0:
@@ -163,7 +165,7 @@ class FutbolEnv(gym.Env):
   
 
             # data structure to contain the 3 actions
-#            self.action_space = spaces.Tuple( (spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4)) )
+            self.action_space = spaces.Tuple( (spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4)) )
 
             # data structure to contain observations the agent would make in one step
             # the 5 values in the array represents: 
