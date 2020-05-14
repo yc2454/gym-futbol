@@ -20,7 +20,7 @@ class Easy_Agent():
 
             self.observations = observations
             self.agent_index = agent_index
-            self.mate_indices = mate_indices
+            self.mate_indices = mates_indices
             self.ball_index = ball_index
 
             self.team = team 
