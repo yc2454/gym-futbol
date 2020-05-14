@@ -251,7 +251,7 @@ class FutbolEnv(gym.Env):
             self.opp_5 = self.obs[self.opp_5_index]
             
             self.ball = self.obs[self.ball_index]
-            self.ball_owner_array = self.obs[self.ball_owner_array_index]
+            # self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
             # who has the ball
             self.ball_owner = BallOwner.NOONE
@@ -828,7 +828,7 @@ class FutbolEnv(gym.Env):
                   self.opp_5 = self.obs[self.opp_5_index]
                   
                   self.ball = self.obs[self.ball_index]
-                  self.ball_owner_array = self.obs[self.ball_owner_array_index]
+#                  self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
             if self.out_of_field():
                   self.fix(self.last_ball_owner)
@@ -874,11 +874,11 @@ class FutbolEnv(gym.Env):
             else:
                   owner_idx = self.ball_index
 
-            for idx in range(10):
-                  if idx == owner_idx:
-                        self.obs[self.ball_owner_array_index][idx] = 10
-                  else:
-                        self.obs[self.ball_owner_array_index][idx] = 0
+#            for idx in range(10):
+#                  if idx == owner_idx:
+#                        self.obs[self.ball_owner_array_index][idx] = 10
+#                  else:
+#                        self.obs[self.ball_owner_array_index][idx] = 0
 
     
       def _get_reward(self, ball, ai_1, ai_2, ai_3, ai_4, ai_5, opp_1, opp_2, opp_3, opp_4, opp_5, ball_owner):
