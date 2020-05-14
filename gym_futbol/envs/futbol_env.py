@@ -136,7 +136,7 @@ class FutbolEnv(gym.Env):
       def __init__(self, length = FIELD_LEN, width = FIELD_WID, goal_size = GOAL_SIZE, 
                    game_time = GAME_TIME, player_speed = PLARYER_SPEED_W_BALL, 
                    shoot_speed = SHOOT_SPEED, Debug = False, pressure_range = PRESSURE_RANGE,
-                   one_goal_end = False):
+                   one_goal_end = False, action_as_int = True, only_reward_goal = False, random_opp = False):
 
             # constants 
             self.length = length
@@ -150,6 +150,17 @@ class FutbolEnv(gym.Env):
             self.one_goal_end = one_goal_end
 
             self.Debug = Debug
+            self.action_as_int = action_as_int
+            self.only_reward_goal = only_reward_goal
+            self.random_opp = random_opp
+            
+            if self.action_as_int:
+                self.action_space = spaces.Discrete(4**5)
+
+            else:
+                # data structure to contain the 3 actions
+                self.action_space = spaces.Tuple((spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4)))
+  
 
             # data structure to contain the 3 actions
             self.action_space = spaces.Tuple( (spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4), spaces.Discrete(4)) )
