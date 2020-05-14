@@ -783,6 +783,7 @@ class FutbolEnv(gym.Env):
 
                   
       def step(self, ai_action_type):
+        print(ai_action_type)
       
         o_b = copy.copy(self.ball)
         o_ai_1 = copy.copy(self.ai_1)
