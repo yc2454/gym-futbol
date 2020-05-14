@@ -1120,7 +1120,7 @@ class FutbolEnv(gym.Env):
                             # person furthest to the goal runs to defend the goal?? TODO: is that right?
                             defence_point = [self.length * 0.75, self.width * 0.5]
                             
-#                            dict = {self.opp_1: 0, self.opp_2: 1, self.opp_3: 2, self.opp_4: 3, self.opp_5: 4}
+                            dict = {self.opp_1[0]: 0, self.opp_2[0]: 1, self.opp_3[0]: 2, self.opp_4[0]: 3, self.opp_5[0]: 4}
                             
                             x_coors = [self.opp_1[0], self.opp_2[0], self.opp_3[0], self.opp_4[0], self.opp_5[0]]
                             opponents = [self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5]
@@ -1130,27 +1130,12 @@ class FutbolEnv(gym.Env):
                             
 #                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
 
-                            x_coors, opponents, action_types, set_targets, targets = zip(*sorted(\
-                            x_coors,\
-                            opponents,\
-                            action_types,\
-                            set_targets,\
-                            targets)\
-                            )
-            
-#                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(\
-#                            x_coors,\
-#                            opponents,\
-#                            action_types,\
-#                            set_targets, \
-#                            targets),\
-#                            reverse=True)))
+                            x_coors = x_coors.sort(reverse = True)
+                            number = dict[x_coors[0]]
                             
-                            action_types[0] = 0 # run
-                            set_targets[0] = True
-#                            number = dict[opponents[0]]
-#                            set_targets[number] = True
-                            targets[0], _ = get_vec(defence_point, opponents[0])
+                            action_types[number] = 0 # run
+                            set_targets[number] = True
+                            targets[number], _ = get_vec(defence_point, opponents[number])
 
 
             self.obs[self.opp_1_agent.agent_index] = self._set_vector_observation(self.opp_1_agent, 
