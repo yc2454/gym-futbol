@@ -237,8 +237,7 @@ class FutbolEnv(gym.Env):
             # value 0 means doesn't have ball, 10 means have ball
             self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
             
-            self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5 self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball, self.ball_owner_array)).reshape((12, 6)) # change the reshape when theres diff #s of players
-
+            self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball, self.ball_owner_array)).reshape((12, 6)) # change the reshape when theres diff #s of players
             self.ai_1 = self.obs[self.ai_1_index]
             self.ai_2 = self.obs[self.ai_2_index]
             self.ai_3 = self.obs[self.ai_3_index]
@@ -428,28 +427,112 @@ class FutbolEnv(gym.Env):
                         if self.Debug: 
                               print(agent.name + " with ball: pass")
 
-                        # figure out who the teammate is TODO: this is dummy code
+                        # figure out who the teammate is: pick the teammate closest to you #TODO: this is probably bad
                         if agent.name == 'opp_1': # 0
-                            mate = self.opp_2
+                            _, mate2_dis = get_vec(self.opp_2[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.opp_3[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.opp_4[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.opp_5[:2], agent_observation[:2])
+                            distance = [mate2_dis, mate3_dis, mate4_dis, mate5_dis]
+                            mates = [self.opp_2, self.opp_3, self.opp_4, self.opp_5]
+                            mate = mates[distance.index(min(distance))]
+                            
                         elif agent.name == 'opp_2': # 1
-                            mate = self.opp_3
-                        elif agent.name == 'opp_3': # 2
-                            mate = self.opp_4
-                        elif agent.name == 'opp_4': # 3
-                            mate = self.opp_5
-                        elif agent.name == 'opp_4': # 3
-                            mate = self.opp_1
+                            _, mate1_dis = get_vec(self.opp_1[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.opp_3[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.opp_4[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.opp_5[:2], agent_observation[:2])
+                            distance = [mate1_dis, mate3_dis, mate4_dis, mate5_dis]
+                            mates = [self.opp_1, self.opp_3, self.opp_4, self.opp_5]
+                            mate = mates[distance.index(min(distance))]
                         
+                        elif agent.name == 'opp_3': # 2
+                            _, mate1_dis = get_vec(self.opp_1[:2], agent_observation[:2])
+                            _, mate2_dis = get_vec(self.opp_2[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.opp_4[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.opp_5[:2], agent_observation[:2])
+                            distance = [mate1_dis, mate2_dis, mate4_dis, mate5_dis]
+                            mates = [self.opp_1, self.opp_2, self.opp_4, self.opp_5]
+                            mate = mates[distance.index(min(distance))]
+                        
+                        elif agent.name == 'opp_4': # 3
+                            _, mate1_dis = get_vec(self.opp_1[:2], agent_observation[:2])
+                            _, mate2_dis = get_vec(self.opp_2[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.opp_3[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.opp_5[:2], agent_observation[:2])
+                            distance = [mate1_dis, mate2_dis, mate3_dis, mate5_dis]
+                            mates = [self.opp_1, self.opp_2, self.opp_3, self.opp_5]
+                            mate = mates[distance.index(min(distance))]
+                        
+                        elif agent.name == 'opp_5': # 3
+                            _, mate1_dis = get_vec(self.opp_1[:2], agent_observation[:2])
+                            _, mate2_dis = get_vec(self.opp_2[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.opp_3[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.opp_4[:2], agent_observation[:2])
+                            distance = [mate1_dis, mate2_dis, mate3_dis, mate4_dis]
+                            mates = [self.opp_1, self.opp_2, self.opp_3, self.opp_4]
+                            mate = mates[distance.index(min(distance))]
+                        
+                        ######### agents ###########
+                        # passing to the closest teammate closer to the goal (right side) than I am (AI passing)
                         elif agent.name == 'ai_1':
-                            mate = self.ai_2
+                            _, mate2_dis = get_vec(self.ai_2[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.ai_3[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.ai_4[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.ai_5[:2], agent_observation[:2])
+                            distances = [mate2_dis, mate3_dis, mate4_dis, mate5_dis]
+                            mates = [self.ai_2, self.ai_3, self.ai_4, self.ai_5]
+                            
+                            distances, mates = (list(t) for t in zip(*sorted(zip(distances, mates))))
+                            mate = next((person for person in mates if person[0] > agent_observation[0]), mates[0])
+
                         elif agent.name == 'ai_2':
-                            mate = self.ai_3
+                            _, mate1_dis = get_vec(self.ai_1[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.ai_3[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.ai_4[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.ai_5[:2], agent_observation[:2])
+                            distances = [mate1_dis, mate3_dis, mate4_dis, mate5_dis]
+                            mates = [self.ai_1, self.ai_3, self.ai_4, self.ai_5]
+                            
+                            distances, mates = (list(t) for t in zip(*sorted(zip(distances, mates))))
+                            mate = next((person for person in mates if person[0] > agent_observation[0]), mates[0])
+                            
                         elif agent.name == 'ai_3':
-                            mate = self.ai_4
+                            _, mate1_dis = get_vec(self.ai_1[:2], agent_observation[:2])
+                            _, mate2_dis = get_vec(self.ai_2[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.ai_4[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.ai_5[:2], agent_observation[:2])
+                            distances = [mate1_dis, mate2_dis, mate4_dis, mate5_dis]
+                            mates = [self.ai_1, self.ai_2, self.ai_4, self.ai_5]
+                            
+                            distances, mates = (list(t) for t in zip(*sorted(zip(distances, mates))))
+                            mate = next((person for person in mates if person[0] > agent_observation[0]), mates[0])
+                            
                         elif agent.name == 'ai_4':
-                            mate = self.ai_5
+                            _, mate1_dis = get_vec(self.ai_1[:2], agent_observation[:2])
+                            _, mate2_dis = get_vec(self.ai_2[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.ai_3[:2], agent_observation[:2])
+                            _, mate5_dis = get_vec(self.ai_5[:2], agent_observation[:2])
+                            distances = [mate1_dis, mate2_dis, mate3_dis, mate5_dis]
+                            mates = [self.ai_1, self.ai_2, self.ai_3, self.ai_5]
+                            
+                            distances, mates = (list(t) for t in zip(*sorted(zip(distances, mates))))
+                            mate = next((person for person in mates if person[0] > agent_observation[0]), mates[0])
+                            
+                            
                         elif agent.name == 'ai_5':
-                            mate = self.ai_1
+                            _, mate1_dis = get_vec(self.ai_1[:2], agent_observation[:2])
+                            _, mate2_dis = get_vec(self.ai_2[:2], agent_observation[:2])
+                            _, mate3_dis = get_vec(self.ai_3[:2], agent_observation[:2])
+                            _, mate4_dis = get_vec(self.ai_4[:2], agent_observation[:2])
+                            distances = [mate1_dis, mate2_dis, mate3_dis, mate4_dis]
+                            mates = [self.ai_1, self.ai_2, self.ai_3, self.ai_4]
+                            
+                            distances, mates = (list(t) for t in zip(*sorted(zip(distances, mates))))
+                            mate = next((person for person in mates if person[0] > agent_observation[0]), mates[0])
+                        
+                        else:
+                            print("paranormal activities")
             
                         # mate_vec_mag = math.sqrt(mate[2]**2 + mate[3]**2)
 
@@ -710,21 +793,40 @@ class FutbolEnv(gym.Env):
                   if self.one_goal_end: 
                         done = True
 
-                  ### changed from simple reset()
+                  ### changed from simple reset() TODO: why is everything set twice_
                   self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+                  
                   self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0])
-                  self.ai_2 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 - 5, 0, 0, 0])
+                  self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+                  self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+                  self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+                  self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+                  
                   self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
-                  self.opp_2 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 - 5, 0, 0, 0])
-                  self.ball_owner_array = np.array([0, 0, 0, 0, 0])
-                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.opp_1, self.opp_2, self.ball, self.ball_owner_array)).reshape((6, 5))
+                  self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+                  self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+                  self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
+                  self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+                  
+                  self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+                  
+                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball, self.ball_owner_array)).reshape((12, 6))
+                  
                   self.ball_owner = BallOwner.NOONE
                   self.last_ball_owner = BallOwner.NOONE
 
                   self.ai_1 = self.obs[self.ai_1_index]
                   self.ai_2 = self.obs[self.ai_2_index]
+                  self.ai_3 = self.obs[self.ai_3_index]
+                  self.ai_4 = self.obs[self.ai_4_index]
+                  self.ai_5 = self.obs[self.ai_5_index]
+                  
                   self.opp_1 = self.obs[self.opp_1_index]
                   self.opp_2 = self.obs[self.opp_2_index]
+                  self.opp_3 = self.obs[self.opp_3_index]
+                  self.opp_4 = self.obs[self.opp_4_index]
+                  self.opp_5 = self.obs[self.opp_5_index]
+                  
                   self.ball = self.obs[self.ball_index]
                   self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
@@ -749,41 +851,56 @@ class FutbolEnv(gym.Env):
       
       def ball_owner_array_update(self):
             if self.ball_owner == BallOwner.AI_1:
-                  owner_idx = self.ai_1_index
+                owner_idx = self.ai_1_index
             elif self.ball_owner == BallOwner.AI_2:
-                  owner_idx = self.ai_2_index
+                owner_idx = self.ai_2_index
+            elif self.ball_owner == BallOwner.AI_3:
+                owner_idx = self.ai_3_index
+            elif self.ball_owner == BallOwner.AI_4:
+                owner_idx = self.ai_4_index
+            elif self.ball_owner == BallOwner.AI_5:
+                owner_idx = self.ai_5_index
+                
             elif self.ball_owner == BallOwner.OPP_1:
                   owner_idx = self.opp_1_index
             elif self.ball_owner == BallOwner.OPP_2:
                   owner_idx = self.opp_2_index
+            elif self.ball_owner == BallOwner.OPP_3:
+                  owner_idx = self.opp_3_index
+            elif self.ball_owner == BallOwner.OPP_4:
+                  owner_idx = self.opp_4_index
+            elif self.ball_owner == BallOwner.OPP_5:
+                owner_idx = self.opp_5_index
             else:
                   owner_idx = self.ball_index
 
-            for idx in range(5):
+            for idx in range(10):
                   if idx == owner_idx:
                         self.obs[self.ball_owner_array_index][idx] = 10
                   else:
                         self.obs[self.ball_owner_array_index][idx] = 0
 
     
-      def _get_reward(self, ball, ai_1, ai_2, opp_1, opp_2, ball_owner):
+      def _get_reward(self, ball, ai_1, ai_2, ai_3, ai_4, ai_5, opp_1, opp_2, opp_3, opp_4, opp_5, ball_owner):
 
             ball_adv = self.ball[0] - ball[0]
             ball_adv_r = ball_adv * BALL_ADV_REWARD_BASE
 
             # player_adv = self.ai_1[0] - ai_1[0] + self.ai_2[0] - ai_2[0]
 
-            defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent)
+            defence = self.defence_near(self.opp_1_agent) + self.defence_near(self.opp_2_agent) + \
+                      self.defence_near(self.opp_3_agent) + self.defence_near(self.opp_4_agent) + \
+                      self.defence_near(self.opp_5_agent)
             defence_r = defence * DEFENCE_REWARD_BASE
 
-            if self.out(self.ai_1) or self.out(self.ai_2):
+            if self.out(self.ai_1) or self.out(self.ai_2) or self.out(self.ai_3) or self.out(self.ai_4) or self.out(self.ai_5):
                   out_of_field = OUT_OF_FIELD_PENALTY
             else:
                   out_of_field = 0
 
-            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] ==0):
+            if (self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2 or self.ball_owner == BallOwner.AI_3 or self.ball_owner == BallOwner.AI_4 or self.ball_owner == BallOwner.AI_5) and (ball_owner[self.ai_1_index] == 0 and ball_owner[self.ai_2_index] == 0 and ball_owner[self.ai_3_index] == 0 and ball_owner[self.ai_4_index] == 0 and ball_owner[self.ai_5_index] == 0):
                   get_ball = 10 * BALL_CONTROL
-            elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+            elif self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2 or self.ball_owner == BallOwner.AI_3 or self.ball_owner == BallOwner.AI_4 or self.ball_owner == BallOwner.AI_5:
                   get_ball = BALL_CONTROL
             else:
                   get_ball = -BALL_CONTROL
@@ -807,30 +924,72 @@ class FutbolEnv(gym.Env):
 
       def _opp_team_set_vector_observation(self):
 
-            if self.ball_owner == BallOwner(self.opp_1_agent.agent_index): 
-                  opp_1_has_ball = True
-                  opp_2_has_ball = False
-                  team_has_ball = True
+            if self.ball_owner == BallOwner(self.opp_1_agent.agent_index):
+                opp_1_has_ball = True
+                opp_2_has_ball = False
+                opp_3_has_ball = False
+                opp_4_has_ball = False
+                opp_5_has_ball = False
+                team_has_ball = True
             elif self.ball_owner == BallOwner(self.opp_2_agent.agent_index):
-                  opp_1_has_ball = False
-                  opp_2_has_ball = True
-                  team_has_ball = True
+                opp_1_has_ball = False
+                opp_2_has_ball = True
+                opp_3_has_ball = False
+                opp_4_has_ball = False
+                opp_5_has_ball = False
+                team_has_ball = True
+            elif self.ball_owner == BallOwner(self.opp_3_agent.agent_index):
+                opp_1_has_ball = False
+                opp_2_has_ball = False
+                opp_3_has_ball = True
+                opp_4_has_ball = False
+                opp_5_has_ball = False
+                team_has_ball = True
+            elif self.ball_owner == BallOwner(self.opp_4_agent.agent_index):
+                opp_1_has_ball = False
+                opp_2_has_ball = False
+                opp_3_has_ball = False
+                opp_4_has_ball = True
+                opp_5_has_ball = False
+                team_has_ball = True
+            elif self.ball_owner == BallOwner(self.opp_5_agent.agent_index):
+                opp_1_has_ball = False
+                opp_2_has_ball = False
+                opp_3_has_ball = False
+                opp_4_has_ball = False
+                opp_5_has_ball = True
+                team_has_ball = True
             else:
-                  opp_1_has_ball = False
-                  opp_2_has_ball = False
-                  team_has_ball = False
+                opp_1_has_ball = False
+                opp_2_has_ball = False
+                opp_3_has_ball = False
+                opp_4_has_ball = False
+                opp_5_has_ball = False
+                team_has_ball = False
 
             opp1_action_type = self.opp_1_agent.get_action_type(self.obs, opp_1_has_ball, team_has_ball)
             opp2_action_type = self.opp_2_agent.get_action_type(self.obs, opp_2_has_ball, team_has_ball)
+            opp3_action_type = self.opp_3_agent.get_action_type(self.obs, opp_3_has_ball, team_has_ball)
+            opp4_action_type = self.opp_4_agent.get_action_type(self.obs, opp_4_has_ball, team_has_ball)
+            opp5_action_type = self.opp_4_agent.get_action_type(self.obs, opp_5_has_ball, team_has_ball)
 
             opp1_action = Action(opp1_action_type)
             opp2_action = Action(opp2_action_type)
+            opp3_action = Action(opp3_action_type)
+            opp4_action = Action(opp4_action_type)
+            opp5_action = Action(opp5_action_type)
 
             opp1_set_target = False
             opp2_set_target = False
+            opp3_set_target = False
+            opp4_set_target = False
+            opp5_set_target = False
 
             opp1_target = [0, 0]
             opp2_target = [0, 0]
+            opp3_target = [0, 0]
+            opp4_target = [0, 0]
+            opp5_target = [0, 0]
 
             # randomize the action of opp2 opp1
 
@@ -846,50 +1005,79 @@ class FutbolEnv(gym.Env):
                                 opp1_target = [-1, -1]
 
                         if opp2_action == Action.run and self.opp_2[0] > self.length * 0.1 :
-
-                                if self.opp_2[1] < self.width * 0.8:
-
-                                        opp2_set_target = True
-                                        opp2_target = [-1, 1]
-
-            if opp_2_has_ball:
-
-                  if opp2_action == Action.run:
-
-                        # run_to_goal_p = 0.5
-                        # if random.random() > run_to_goal_p:
-
-                        if self.opp_2[1] < self.width * 0.8:
-                                
+                            if self.opp_2[1] < self.width * 0.8:
                                 opp2_set_target = True
                                 opp2_target = [-1, 1]
+                                        
+                        if opp3_action == Action.run and self.opp_3[0] > self.length * 0.1 :
+                            if self.opp_3[1] < self.width * 0.8:
+                                opp3_set_target = True
+                                opp3_target = [-1, 1]
+                        
+                        if opp4_action == Action.run and self.opp_4[0] > self.length * 0.1 :
+                            if self.opp_4[1] < self.width * 0.8:
+                                opp4_set_target = True
+                                opp4_target = [-1, 1]
+                                
+                        if opp5_action == Action.run and self.opp_5[0] > self.length * 0.1 :
+                            if self.opp_5[1] < self.width * 0.8:
+                                opp5_set_target = True
+                                opp5_target = [-1, 1]
 
-                        if opp1_action == Action.run and self.opp_1[0] > self.length * 0.1 :
 
-                                if self.opp_1[1] > self.width * 0.2:
+            if opp_2_has_ball:
+                if opp2_action == Action.run:
+                # run_to_goal_p = 0.5
+                # if random.random() > run_to_goal_p:
 
-                                        opp1_set_target = True
-                                        opp1_target = [-1, -1]
+                    if self.opp_2[1] < self.width * 0.8:
+                            
+                            opp2_set_target = True
+                            opp2_target = [-1, 1]
+
+                    if opp1_action == Action.run and self.opp_1[0] > self.length * 0.1 :
+
+                            if self.opp_1[1] > self.width * 0.2:
+
+                                    opp1_set_target = True
+                                    opp1_target = [-1, -1]
+                                    
+                    if opp3_action == Action.run and self.opp_3[0] > self.length * 0.1 :
+                        if self.opp_3[1] < self.width * 0.8:
+                            opp3_set_target = True
+                            opp3_target = [-1, 1]
+                    
+                    if opp4_action == Action.run and self.opp_4[0] > self.length * 0.1 :
+                        if self.opp_4[1] < self.width * 0.8:
+                            opp4_set_target = True
+                            opp4_target = [-1, 1]
+                            
+                    if opp5_action == Action.run and self.opp_5[0] > self.length * 0.1 :
+                        if self.opp_5[1] < self.width * 0.8:
+                            opp5_set_target = True
+                            opp5_target = [-1, 1]
 
 
-            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2:
+            if self.ball_owner == BallOwner.AI_1 or self.ball_owner == BallOwner.AI_2 or self.ball_owner == BallOwner.AI_3 or self.ball_owner == BallOwner.AI_4 or self.ball_owner == BallOwner.AI_5:
 
                     if self.ball[0] < self.length * 0.6:
-
+                            # person furthest to the goal runs to defend the goal?? TODO: is that right?
                             defence_point = [self.length * 0.75, self.width * 0.5]
                             
-                            if self.opp_1[0] > self.opp_2[0]:
-
-                                  opp1_action_type = 0 # run
-                                  opp1_set_target = True
-                                  opp1_target, _ = get_vec(defence_point, self.opp_1)
-
-                            else:
-
-                                  opp2_action_type = 0 # run
-                                  opp2_set_target = True
-                                  opp2_target, _ = get_vec(defence_point, self.opp_2)
-
+                            x_coors = [self.opp_1[0], self.opp_2[0], self.opp_3[0], self.opp_4[0], self.opp_5[0]]
+                            opponents = [self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5]
+                            action_types = [opp1_action_type, opp2_action_type, opp3_action_type, opp4_action_type, opp5_action_type]
+                            set_targets = [opp1_set_target, opp2_set_target, opp3_set_target, opp4_set_target, opp5_set_target]
+                            targets = [opp1_target, opp2_target, opp3_target, opp4_target, opp5_target]
+                            
+                            x_coors, opponents, action_types, set_targets, targets = (list(t) for t in zip\
+                            (*sorted(zip(x_coors, opponents, action_types, set_targets, targets))))
+                            
+                            num_players = len(x_coors)
+                            
+                            action_types[num_players-1] = 0 # run
+                            set_targets[num_players-1] = True
+                            targets[num_players-1], _ = get_vec(defence_point, opponents[num_players-1])
 
 
             self.obs[self.opp_1_agent.agent_index] = self._set_vector_observation(self.opp_1_agent, 
@@ -901,9 +1089,27 @@ class FutbolEnv(gym.Env):
                                                                                   opp2_action_type,
                                                                                   set_target = opp2_set_target, 
                                                                                   target = opp2_target)
+                                                                                  
+            self.obs[self.opp_3_agent.agent_index] = self._set_vector_observation(self.opp_3_agent,
+                                                                                  opp3_action_type,
+                                                                                  set_target = opp3_set_target,
+                                                                                  target = opp3_target)
+                                                                                  
+            self.obs[self.opp_4_agent.agent_index] = self._set_vector_observation(self.opp_4_agent,
+                                                                                  opp4_action_type,
+                                                                                  set_target = opp4_set_target,
+                                                                                  target = opp4_target)
+                                                                            
+            self.obs[self.opp_5_agent.agent_index] = self._set_vector_observation(self.opp_5_agent,
+                                                                                  opp5_action_type,
+                                                                                  set_target = opp5_set_target,
+                                                                                  target = opp5_target)
+
             
 
-            if self.ball_owner == BallOwner.NOONE and opp1_action == Action.run and opp2_action == Action.run:
+            if self.ball_owner == BallOwner.NOONE and opp1_action == Action.run and opp2_action == Action.run \
+                                                  and opp3_action == Action.run and opp4_action == Action.run \
+                                                  and opp5_action == Action.run :
 
                     # anticipate the ball movement
                     ball_next_obs = copy.copy(self.ball)
@@ -912,17 +1118,34 @@ class FutbolEnv(gym.Env):
 
                     opp1_to_ball_next, opp1_to_ball_next_mag = get_vec(ball_next_obs, self.opp_1)
                     opp2_to_ball_next, opp2_to_ball_next_mag = get_vec(ball_next_obs, self.opp_2)
+                    opp3_to_ball_next, opp3_to_ball_next_mag = get_vec(ball_next_obs, self.opp_3)
+                    opp4_to_ball_next, opp4_to_ball_next_mag = get_vec(ball_next_obs, self.opp_4)
+                    opp5_to_ball_next, opp5_to_ball_next_mag = get_vec(ball_next_obs, self.opp_5)
 
-                    if opp1_to_ball_next_mag < STEP_SIZE * self.player_speed: 
-
-                            target_m = opp1_to_ball_next_mag / STEP_SIZE
-                            self.opp_1[2:4] = opp1_to_ball_next
-                            self.opp_1[4] = target_m
+                    if opp1_to_ball_next_mag < STEP_SIZE * self.player_speed:
+                        target_m = opp1_to_ball_next_mag / STEP_SIZE
+                        self.opp_1[2:4] = opp1_to_ball_next
+                        self.opp_1[4] = target_m
 
                     elif opp2_to_ball_next_mag < STEP_SIZE * self.player_speed:
+                        target_m = opp2_to_ball_next_mag / STEP_SIZE
+                        self.opp_2[2:4] = opp2_to_ball_next
+                        self.opp_2[4] = target_m
+                            
+                    elif opp3_to_ball_next_mag < STEP_SIZE * self.player_speed:
 
-                            target_m = opp2_to_ball_next_mag / STEP_SIZE
-                            self.opp_2[2:4] = opp2_to_ball_next
-                            self.opp_2[4] = target_m
-          
+                        target_m = opp3_to_ball_next_mag / STEP_SIZE
+                        self.opp_3[2:4] = opp3_to_ball_next
+                        self.opp_3[4] = target_m
+                        
+                    elif opp4_to_ball_next_mag < STEP_SIZE * self.player_speed:
 
+                        target_m = opp4_to_ball_next_mag / STEP_SIZE
+                        self.opp_4[2:4] = opp4_to_ball_next
+                        self.opp_4[4] = target_m
+                        
+                    elif opp5_to_ball_next_mag < STEP_SIZE * self.player_speed:
+
+                        target_m = opp5_to_ball_next_mag / STEP_SIZE
+                        self.opp_5[2:4] = opp5_to_ball_next
+                        self.opp_5[4] = target_m
