@@ -812,8 +812,8 @@ class FutbolEnv(gym.Env):
         else:
             self._opp_team_set_vector_observation()
 
-        if self.action_as_int:
-            ai_action_type = tuple(base_convert(ai_action_type, 4))
+#        if self.action_as_int:
+#            ai_action_type = tuple(base_convert(ai_action_type, 4))
 
         self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
         self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
