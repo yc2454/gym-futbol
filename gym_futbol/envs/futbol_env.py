@@ -1120,7 +1120,7 @@ class FutbolEnv(gym.Env):
                             # person furthest to the goal runs to defend the goal?? TODO: is that right?
                             defence_point = [self.length * 0.75, self.width * 0.5]
                             
-                            dict = {self.opp_1: 0, self.opp_2: 1, self.opp_3: 2, self.opp_4: 3, self.opp_5: 4}
+#                            dict = {self.opp_1: 0, self.opp_2: 1, self.opp_3: 2, self.opp_4: 3, self.opp_5: 4}
                             
                             x_coors = [self.opp_1[0], self.opp_2[0], self.opp_3[0], self.opp_4[0], self.opp_5[0]]
                             opponents = [self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5]
