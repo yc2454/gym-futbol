@@ -73,6 +73,7 @@ class Easy_Agent():
 
             _, ball_to_agent_magnitude = get_vec(self.ball[:2], self.agent_observation[:2])
             
+            mate_to_agent_magnitude = random.sample(range(10), num_mates)
             for i in range (num_mates):
                 _, mate_to_agent_magnitude[i] = get_vec(self.mate_observations[i][:2], self.agent_observation[:2])
 
