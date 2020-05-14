@@ -1121,7 +1121,6 @@ class FutbolEnv(gym.Env):
                             dict = {self.opp_1[0]: 0, self.opp_2[0]: 1, self.opp_3[0]: 2, self.opp_4[0]: 3, self.opp_5[0]: 4}
                             
                             x_coors = [self.opp_1[0], self.opp_2[0], self.opp_3[0], self.opp_4[0], self.opp_5[0]]
-                            print(x_coors)
                             
                             opponents = [self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5]
                             action_types = [opp1_action_type, opp2_action_type, opp3_action_type, opp4_action_type, opp5_action_type]
