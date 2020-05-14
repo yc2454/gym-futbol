@@ -215,22 +215,22 @@ class FutbolEnv(gym.Env):
             # refer to the observation_space comment
             #  
             # position and movement of the ball
-            self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+            self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0, 0])
             # position and movement of the first AI player
-            self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0])
+            self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2, 0, 0, 0, 0])
             # position and movement of the rest of AI players
-            self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-            self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
-            self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-            self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+            self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+            self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+            self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+            self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
             
             # position and movement of the first opponent player
-            self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
+            self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
             # position and movement of the rest of the opponent players
-            self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-            self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
-            self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-            self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+            self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+            self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+            self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+            self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
             
             # array representing who has the ball
             # index 0-10 represents players, no one, respectively
@@ -794,19 +794,19 @@ class FutbolEnv(gym.Env):
                         done = True
 
                   ### changed from simple reset() TODO: why is everything set twice_
-                  self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0])
+                  self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0, 0])
                   
-                  self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0])
-                  self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-                  self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
-                  self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-                  self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+                  self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
+                  self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+                  self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+                  self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+                  self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
                   
-                  self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0])
-                  self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-                  self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
-                  self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0])
-                  self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0])
+                  self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
+                  self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+                  self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+                  self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+                  self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
                   
                   self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
                   
