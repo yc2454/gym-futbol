@@ -817,78 +817,78 @@ class FutbolEnv(gym.Env):
         self._step_by_observation(self.obs[4], is_ball=True)
 
 
-            # calculate reward
-            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_ai_3, o_ai_4, o_ai_5, o_p_1, o_p_2, o_p_3, o_p_4, o_p_5,  o_b_o_a)
+        # calculate reward
+        reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_ai_3, o_ai_4, o_ai_5, o_p_1, o_p_2, o_p_3, o_p_4, o_p_5,  o_b_o_a)
 
-            done = False
+        done = False
 
-            if self.score():
-                  if self.ball[0] <= 0:
-                        self.opp_score += 1
-                  else:
-                        self.ai_score += 1
+        if self.score():
+              if self.ball[0] <= 0:
+                    self.opp_score += 1
+              else:
+                    self.ai_score += 1
 
-                  if self.Debug: 
-                        print("Score!!!")
-                        print("ai : opp = " + str(self.ai_score) + " : " + str(self.opp_score))
+              if self.Debug:
+                    print("Score!!!")
+                    print("ai : opp = " + str(self.ai_score) + " : " + str(self.opp_score))
 
-                  if self.one_goal_end: 
-                        done = True
+              if self.one_goal_end:
+                    done = True
 
-                  ### changed from simple reset() TODO: why is everything set twice_
-                  self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0, 0])
-                  
-                  self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
-                  self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
-                  self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
-                  self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
-                  self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
-                  
-                  self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
-                  self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
-                  self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
-                  self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
-                  self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
-                  
-                  self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-                  
-                  self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball)).reshape((11, 6))
-                  
-                  self.ball_owner = BallOwner.NOONE
-                  self.last_ball_owner = BallOwner.NOONE
+              ### changed from simple reset() TODO: why is everything set twice_
+              self.ball = np.array([FIELD_LEN/2, FIELD_WID/2, 0, 0, 0, 0])
+              
+              self.ai_1 = np.array([FIELD_LEN/2 - 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
+              self.ai_2 = np.array([FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+              self.ai_3 = np.array([FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+              self.ai_4 = np.array([FIELD_LEN/3, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+              self.ai_5 = np.array([FIELD_LEN/3, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+              
+              self.opp_1 = np.array([FIELD_LEN/2 + 9, FIELD_WID/2 + 5, 0, 0, 0, 0])
+              self.opp_2 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+              self.opp_3 = np.array([5 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+              self.opp_4 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 - FIELD_WID/6, 0, 0, 0, 0])
+              self.opp_5 = np.array([4 * FIELD_LEN/6, FIELD_WID/2 + FIELD_WID/6, 0, 0, 0, 0])
+              
+              self.ball_owner_array = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+              
+              self.obs = np.concatenate((self.ai_1, self.ai_2, self.ai_3, self.ai_4, self.ai_5, self.opp_1, self.opp_2, self.opp_3, self.opp_4, self.opp_5, self.ball)).reshape((11, 6))
+              
+              self.ball_owner = BallOwner.NOONE
+              self.last_ball_owner = BallOwner.NOONE
 
-                  self.ai_1 = self.obs[self.ai_1_index]
-                  self.ai_2 = self.obs[self.ai_2_index]
-                  self.ai_3 = self.obs[self.ai_3_index]
-                  self.ai_4 = self.obs[self.ai_4_index]
-                  self.ai_5 = self.obs[self.ai_5_index]
-                  
-                  self.opp_1 = self.obs[self.opp_1_index]
-                  self.opp_2 = self.obs[self.opp_2_index]
-                  self.opp_3 = self.obs[self.opp_3_index]
-                  self.opp_4 = self.obs[self.opp_4_index]
-                  self.opp_5 = self.obs[self.opp_5_index]
-                  
-                  self.ball = self.obs[self.ball_index]
+              self.ai_1 = self.obs[self.ai_1_index]
+              self.ai_2 = self.obs[self.ai_2_index]
+              self.ai_3 = self.obs[self.ai_3_index]
+              self.ai_4 = self.obs[self.ai_4_index]
+              self.ai_5 = self.obs[self.ai_5_index]
+              
+              self.opp_1 = self.obs[self.opp_1_index]
+              self.opp_2 = self.obs[self.opp_2_index]
+              self.opp_3 = self.obs[self.opp_3_index]
+              self.opp_4 = self.obs[self.opp_4_index]
+              self.opp_5 = self.obs[self.opp_5_index]
+              
+              self.ball = self.obs[self.ball_index]
 #                  self.ball_owner_array = self.obs[self.ball_owner_array_index]
 
-            if self.out_of_field():
-                  self.fix(self.last_ball_owner)
-                  if self.Debug: 
-                        print("fix out of box ball")
+        if self.out_of_field():
+              self.fix(self.last_ball_owner)
+              if self.Debug:
+                    print("fix out of box ball")
 
-                  if self.one_goal_end: 
-                        done = True
+              if self.one_goal_end:
+                    done = True
 
-            self.ball_owner_array_update()
+        self.ball_owner_array_update()
 
-            # figure out whether the game is over
-            if self.time >= self.game_time:
-                  done = True
-            
-            # one second passes in the game
-            self.time += STEP_SIZE
-            return self.obs, reward, done, {}
+        # figure out whether the game is over
+        if self.time >= self.game_time:
+              done = True
+        
+        # one second passes in the game
+        self.time += STEP_SIZE
+        return self.obs, reward, done, {}
 
       
       def ball_owner_array_update(self):
