@@ -1130,8 +1130,12 @@ class FutbolEnv(gym.Env):
                             
 #                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
 
-                            x_coors = x_coors.sort(reverse = True)
+                            x_coors.sort(reverse = True)
+                            print(x_coors)
+                            print(x_coors[0])
+                            print(dict)
                             number = dict[x_coors[0]]
+                            
                             
                             action_types[number] = 0 # run
                             set_targets[number] = True
