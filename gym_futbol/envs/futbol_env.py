@@ -301,11 +301,11 @@ class FutbolEnv(gym.Env):
             ax.set_ylim(0, self.width)
 
             # ai
-            ai_1_x, ai_1_y, _, _, _ = self.obs[self.ai_1_index]
-            ai_2_x, ai_2_y, _, _, _ = self.obs[self.ai_2_index]
-            ai_3_x, ai_3_y, _, _, _ = self.obs[self.ai_3_index]
-            ai_4_x, ai_4_y, _, _, _ = self.obs[self.ai_4_index]
-            ai_5_x, ai_5_y, _, _, _ = self.obs[self.ai_5_index]
+            ai_1_x, ai_1_y, _, _, _, _ = self.obs[self.ai_1_index]
+            ai_2_x, ai_2_y, _, _, _, _ = self.obs[self.ai_2_index]
+            ai_3_x, ai_3_y, _, _, _, _ = self.obs[self.ai_3_index]
+            ai_4_x, ai_4_y, _, _, _, _ = self.obs[self.ai_4_index]
+            ai_5_x, ai_5_y, _, _, _, _ = self.obs[self.ai_5_index]
             ax.plot(ai_1_x,ai_1_y, color = 'red', marker='o', markersize=12, label='ai')
             ax.plot(ai_2_x,ai_2_y, color = 'red', marker='o', markersize=12, label='ai')
             ax.plot(ai_3_x,ai_3_y, color = 'red', marker='o', markersize=12, label='ai')
@@ -313,22 +313,22 @@ class FutbolEnv(gym.Env):
             ax.plot(ai_5_x,ai_5_y, color = 'red', marker='o', markersize=12, label='ai')
 
             # opp
-            opp_1_x, opp_1_y, _, _, _ = self.obs[self.opp_1_index]
-            opp_2_x, opp_2_y, _, _, _ = self.obs[self.opp_2_index]
-            opp_3_x, opp_3_y, _, _, _ = self.obs[self.opp_3_index]
-            opp_4_x, opp_4_y, _, _, _ = self.obs[self.opp_4_index]
-            opp_5_x, opp_5_y, _, _, _ = self.obs[self.opp_5_index]
+            opp_1_x, opp_1_y, _, _, _, _ = self.obs[self.opp_1_index]
+            opp_2_x, opp_2_y, _, _, _, _ = self.obs[self.opp_2_index]
+            opp_3_x, opp_3_y, _, _, _, _ = self.obs[self.opp_3_index]
+            opp_4_x, opp_4_y, _, _, _, _ = self.obs[self.opp_4_index]
+            opp_5_x, opp_5_y, _, _, _, _ = self.obs[self.opp_5_index]
             ax.plot(opp_1_x, opp_1_y, color = 'blue', marker='o', markersize=12, label='opp')
             ax.plot(opp_2_x, opp_2_y, color = 'blue', marker='o', markersize=12, label='opp')
             ax.plot(opp_3_x, opp_3_y, color = 'blue', marker='o', markersize=12, label='opp')
             ax.plot(opp_4_x, opp_4_y, color = 'blue', marker='o', markersize=12, label='opp')
             ax.plot(opp_5_x, opp_5_y, color = 'blue', marker='o', markersize=12, label='opp')
             # ball
-            ball_x, ball_y, _, _, _ = self.obs[self.ball_index]
+            ball_x, ball_y, _, _, _, _ = self.obs[self.ball_index]
             ax.plot(ball_x, ball_y, color = 'green', marker='o', markersize=8, label='ball')
 
             ax.legend()
-#            plt.show()
+            plt.show()
 
 
       def defence_near(self, agent):
@@ -639,7 +639,8 @@ class FutbolEnv(gym.Env):
                       # ball owener not change
                   elif action == Action.run: 
 
-                        agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
+                        # agent_observation[4] = 1.0 * random.randint(self.player_speed, self.player_speed + 4)
+                        agent_observation[4] = self.player_speed
 
                         if set_target:
     
