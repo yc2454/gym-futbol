@@ -54,6 +54,15 @@ MAX_INTERCEPT_DIST = 2
 MIN_INTERCEPT_DIST = 1
 
 
+def base_convert(i, b):
+    
+    result = []
+    while i > 0:
+        result.insert(0, i % b)
+        i = i // b
+    for j in range(5-len(result)):
+        result.insert(0, 0)
+    return result
 
 # get the vector pointing from [coor2] to [coor1] and 
 # its magnitude
@@ -760,23 +769,56 @@ class FutbolEnv(gym.Env):
 
                   
       def step(self, ai_action_type):
+      
+        o_b = copy.copy(self.ball)
+        o_ai_1 = copy.copy(self.ai_1)
+        o_ai_2 = copy.copy(self.ai_2)
+        o_ai_3 = copy.copy(self.ai_3)
+        o_ai_4 = copy.copy(self.ai_4)
+        o_ai_5 = copy.copy(self.ai_5)
+        
+        o_p_1 = copy.copy(self.opp_1)
+        o_p_2 = copy.copy(self.opp_2)
+        o_p_3 = copy.copy(self.opp_3)
+        o_p_4 = copy.copy(self.opp_4)
+        o_p_5 = copy.copy(self.opp_5)
+        o_b_o_a = copy.copy(self.ball_owner_array)
+        
+        individual_size = 4
 
-            o_b = copy.copy(self.ball)
-            o_ai_1 = copy.copy(self.ai_1)
-            o_ai_2 = copy.copy(self.ai_2)
-            o_p_1 = copy.copy(self.opp_1)
-            o_p_2 = copy.copy(self.opp_2)
-            o_b_o_a = copy.copy(self.ball_owner_array)
+        if self.random_opp:
+        
+            opp_action_type = random.randint(0, 15)
+            opp_action_type = tuple(base_convert(opp_action_type, 4))
 
+            self._agent_set_vector_observation(self.opp_1_agent, action_set = True, action_type = opp_action_type[0])
+            self._agent_set_vector_observation(self.opp_2_agent, action_set = True, action_type = opp_action_type[1])
+            self._agent_set_vector_observation(self.opp_3_agent, action_set = True, action_type = opp_action_type[2])
+            self._agent_set_vector_observation(self.opp_4_agent, action_set = True, action_type = opp_action_type[3])
+            self._agent_set_vector_observation(self.opp_5_agent, action_set = True, action_type = opp_action_type[4])
+
+        else:
             self._opp_team_set_vector_observation()
 
-            self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
-            self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
+        if self.action_as_int:
+            ai_action_type = tuple(base_convert(ai_action_type, 4))
 
-            self._step_vector_observations(self.obs)
+        self._agent_set_vector_observation(self.ai_1_agent, action_set = True, action_type = ai_action_type[0])
+        self._agent_set_vector_observation(self.ai_2_agent, action_set = True, action_type = ai_action_type[1])
+        self._agent_set_vector_observation(self.ai_3_agent, action_set = True, action_type = ai_action_type[2])
+        self._agent_set_vector_observation(self.ai_4_agent, action_set = True, action_type = ai_action_type[3])
+        self._agent_set_vector_observation(self.ai_5_agent, action_set = True, action_type = ai_action_type[4])
+
+        ### changed
+        # use the old step vector function for the players who
+        # doesn't decelerate
+        self._step_vector_observations(self.obs[0:4])
+        # use deceleration step function for ball
+        self._step_by_observation(self.obs[4], is_ball=True)
+
 
             # calculate reward
-            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_p_1, o_p_2, o_b_o_a)
+            reward = self._get_reward(o_b, o_ai_1, o_ai_2, o_ai_3, o_ai_4, o_ai_5, o_p_1, o_p_2, o_p_3, o_p_4, o_p_5,  o_b_o_a)
 
             done = False
 
