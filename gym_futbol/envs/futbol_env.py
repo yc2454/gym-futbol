@@ -298,8 +298,6 @@ class FutbolEnv(gym.Env):
             ax.set_xlim(0, self.length)
             ax.set_ylim(0, self.width)
 
-            print(self.ball_owner)
-
             # ai
             ai_1_x, ai_1_y, _, _, _ = self.obs[self.ai_1_index]
             ai_2_x, ai_2_y, _, _, _ = self.obs[self.ai_2_index]
@@ -1129,13 +1127,8 @@ class FutbolEnv(gym.Env):
                             action_types = [opp1_action_type, opp2_action_type, opp3_action_type, opp4_action_type, opp5_action_type]
                             set_targets = [opp1_set_target, opp2_set_target, opp3_set_target, opp4_set_target, opp5_set_target]
                             targets = [opp1_target, opp2_target, opp3_target, opp4_target, opp5_target]
-                            
-#                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
 
                             x_coors.sort(reverse = True)
-                            print(x_coors)
-                            print(x_coors[0])
-                            print(dict)
                             number = dict[x_coors[0]]
                             
                             
