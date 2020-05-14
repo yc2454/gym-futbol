@@ -1126,14 +1126,13 @@ class FutbolEnv(gym.Env):
                             set_targets = [opp1_set_target, opp2_set_target, opp3_set_target, opp4_set_target, opp5_set_target]
                             targets = [opp1_target, opp2_target, opp3_target, opp4_target, opp5_target]
                             
-                            x_coors, opponents, action_types, set_targets, targets = (list(t) for t in zip\
-                            (*sorted(zip(x_coors, opponents, action_types, set_targets, targets))))
+#                            x_coors, opponents, action_types, set_targets, targets = (list(t) for t in zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets))))
                             
-                            num_players = len(x_coors)
+                            x_coors, opponents, action_types, set_targets, targets = map(list, zip(*sorted(zip(x_coors, opponents, action_types, set_targets, targets), reverse=True)))
                             
-                            action_types[num_players-1] = 0 # run
-                            set_targets[num_players-1] = True
-                            targets[num_players-1], _ = get_vec(defence_point, opponents[num_players-1])
+                            action_types[0] = 0 # run
+                            set_targets[0] = True
+                            targets[0], _ = get_vec(defence_point, opponents[num_players-1])
 
 
             self.obs[self.opp_1_agent.agent_index] = self._set_vector_observation(self.opp_1_agent, 
