@@ -690,25 +690,28 @@ class FutbolEnv(gym.Env):
       # action_set=True means the action is given in the step function
       # action_set=False means the action need to be deduced from agent
       def _agent_set_vector_observation(self, agent, action_set = False, action_type = 0):
+        
+        mate_indices = agent.mate_indices
+        
+        if self.ball_owner == BallOwner(agent.agent_index):
+              agent_has_ball = True
+              team_has_ball = True
+        
+        elif self.ball_owner == BallOwner(agent.mate_indices[0]) or self.ball_owner == BallOwner(agent.mate_indices[1]) or self.ball_owner == BallOwner(agent.mate_indices[2]) or self.ball_owner == BallOwner(agent.mate_indices[3]):
+              agent_has_ball = False
+              team_has_ball = True
+        else:
+              agent_has_ball = False
+              team_has_ball = False
 
-            if self.ball_owner == BallOwner(agent.agent_index): 
-                  agent_has_ball = True
-                  team_has_ball = True
-            elif self.ball_owner == BallOwner(agent.mate_index):
-                  agent_has_ball = False
-                  team_has_ball = True
-            else:
-                  agent_has_ball = False
-                  team_has_ball = False
+        if not action_set:
 
-            if not action_set:
+              action_type = agent.get_action_type(self.obs, agent_has_ball, team_has_ball)
 
-                  action_type = agent.get_action_type(self.obs, agent_has_ball, team_has_ball)
+        else:
+              agent._set_has_ball(agent_has_ball)
 
-            else:
-                  agent._set_has_ball(agent_has_ball)
-
-            self.obs[agent.agent_index] = self._set_vector_observation(agent, action_type)
+        self.obs[agent.agent_index] = self._set_vector_observation(agent, action_type)
 
 
       # move the [loc] according to [vec]
