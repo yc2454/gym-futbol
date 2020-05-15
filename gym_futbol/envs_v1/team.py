@@ -99,3 +99,57 @@ class Team():
             obs_array.append(player.get_observation())
         obs_array = np.reshape(np.array(obs_array), -1)
         return obs_array
+
+    def get_position_list(self):
+        x_pos, y_pos = [], []
+        for player in self.player_array:
+            x, y = player.get_position()
+            x_pos.append(x)
+            y_pos.append(y)
+        return np.array(x_pos), np.array(y_pos)
+
+    def get_pass_target_teammate(self, player, arrow_keys):
+        if self.player_number == 1:
+            return player
+        else:
+            # choose any other player
+            target_teammate = random.choices(self.player_array, weights=(
+                np.array(self.player_array) != player).astype(int))
+
+            # noop
+            if arrow_keys == 0:
+                pass
+            else:
+                x_pos, y_pos = self.get_position_list()
+                player_x, player_y = player.get_position()
+                minus_x, minus_y = x_pos - player_x, y_pos - player_y
+                # up
+                if arrow_keys == 1:
+                    if np.any(minus_y > 0):
+                        target_teammate = random.choices(
+                            self.player_array, weights=(minus_y > 0).astype(int))
+                    else:
+                        pass
+                # right
+                elif arrow_keys == 2:
+                    if np.any(minus_x > 0):
+                        target_teammate = random.choices(
+                            self.player_array, weights=(minus_x > 0).astype(int))
+                    else:
+                        pass
+                # down
+                elif arrow_keys == 3:
+                    if np.any(minus_y < 0):
+                        target_teammate = random.choices(
+                            self.player_array, weights=(minus_y < 0).astype(int))
+                    else:
+                        pass
+                # left
+                elif arrow_keys == 4:
+                    if np.any(minus_x < 0):
+                        target_teammate = random.choices(
+                            self.player_array, weights=(minus_x < 0).astype(int))
+                    else:
+                        pass
+
+            return target_teammate[0]

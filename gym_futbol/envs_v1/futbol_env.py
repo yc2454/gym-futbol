@@ -74,11 +74,9 @@ class Futbol(gym.Env):
 
         # action space
         # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
-        # 2) Button A (dash):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-        # 3) Button B (shoot):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-        # 4) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
+        # 2) Action Keys: Discrete 4  - noop[0], dash[1], shoot[2], press[3], pass[4] - params: min: 0, max: 4
         self.action_space = spaces.MultiDiscrete(
-            [5, 2, 2, 2] * NUMBER_OF_PLAYER)
+            [5, 5] * self.number_of_player)
 
         # observation space (normalized)
         # [0] x position
@@ -306,11 +304,7 @@ class Futbol(gym.Env):
             pass
 
     def random_action(self):
-        action_arr = []
-        for _ in range(self.number_of_player):
-            action_arr.append([random.randint(0, 4), random.randint(0, 1),
-                               random.randint(0, 1), random.randint(0, 1)])
-        return np.array(action_arr)
+        return self.action_space.sample()
 
     def _process_action(self, player, action):
         # Arrow Keys
@@ -332,27 +326,22 @@ class Futbol(gym.Env):
         else:
             print("invalid arrow keys")
 
-        # Button A: dash
-        # Buttion A: no dash
+        # Action keys
+        # noop [0]
         if action[1] == 0:
             player.apply_force_to_player(PLAYER_WEIGHT * force_x,
                                          PLAYER_WEIGHT * force_y)
 
             self._ball_move_with_player(player)
-        # Buttion A: dash
+
+        # dash [1]
         elif action[1] == 1:
             player.apply_force_to_player(PLAYER_FORCE_LIMIT * force_x,
                                          PLAYER_FORCE_LIMIT * force_y)
             self._ball_move_with_player(player)
-        else:
-            print("invalid dash command")
 
-        # Button B: shoot
-        # simple shoot need further changes
-        if action[2] == 0:
-            pass
-        # Buttion B: shoot
-        elif action[2] == 1:
+        # shoot [2]
+        elif action[1] == 2:
             if self.ball.has_contact_with(player):
                 if player.side == "left":
                     goal = [self.width, self.height/2]
@@ -377,15 +366,9 @@ class Futbol(gym.Env):
                 self.ball.apply_force_to_ball(ball_force_x, ball_force_y)
             else:
                 pass
-        else:
-            print("invalid kick command")
 
-        # Button C: press
-        # Buttion C: no press
-        if action[3] == 0:
-            pass
-        # Buttion C: press
-        elif action[3] == 1:
+        # press [3]
+        elif action[1] == 3:
             # cannot press with ball
             if self.ball.has_contact_with(player):
                 pass
@@ -406,20 +389,47 @@ class Futbol(gym.Env):
             # no ball, arrow keys pressed, run as the arrow key
             else:
                 pass
+
+        # pass [4]
+        elif action[1] == 4:
+            if self.ball.has_contact_with(player):
+                team = self.team_A if player.side == "left" else self.team_B
+
+                target_player = team.get_pass_target_teammate(
+                    player, arrow_keys=action[0])
+
+                goal = target_player.get_position()
+
+                ball_pos = self.ball.get_position()
+                ball_to_goal_vec, ball_to_goal_vec_mag = get_vec(
+                    goal, ball_pos)
+
+                ball_force_x = (BALL_FORCE_LIMIT - 20) * \
+                    ball_to_goal_vec[0] / ball_to_goal_vec_mag
+                ball_force_y = (BALL_FORCE_LIMIT - 20) * \
+                    ball_to_goal_vec[1] / ball_to_goal_vec_mag
+
+                # decrease the velocity influence on pass
+                self.ball.body.velocity /= 10
+
+                self.ball_owner_side = player.side
+                self.ball.apply_force_to_ball(ball_force_x, ball_force_y)
+            # cannot pass ball without ball
+            else:
+                pass
+
         else:
-            print("invalid press command")
+            print("invalid action key")
 
     # action should be np.array
     # action space
     # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
-    # 2) Button A (dash):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-    # 3) Button B (shoot):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-    # 4) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
+    # 2) Action Keys: Discrete 4  - noop[0], dash[1], shoot[2], press[3] - params: min: 0, max: 3
     def step(self, left_player_action):
 
-        right_player_action = self.random_action()
+        right_player_action = np.reshape(self.random_action(), (-1, 2))
 
-        left_player_action = np.reshape(left_player_action, (-1, 4))
+        left_player_action = np.reshape(left_player_action, (-1, 2))
 
         init_distance_arr = self._ball_to_team_distance_arr(self.team_A)
 
@@ -504,3 +514,4 @@ class Futbol(gym.Env):
         _, ball_i_to_goal = get_vec(ball_init, goal)
 
         return (ball_i_to_goal - ball_a_to_goal) * ball_to_goal_reward_coefficient
+
