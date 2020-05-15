@@ -8,3 +8,8 @@ register(
     id='Futbol-extrahard-v0',
     entry_point='gym_futbol.envs:FutbolExtraHardEnv',
 )
+
+register(
+    id='Futbol-v1',
+    entry_point='gym_futbol.envs_v1:Futbol',
+)

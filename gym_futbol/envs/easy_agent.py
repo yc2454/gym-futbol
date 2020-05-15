@@ -1,6 +1,6 @@
 import math
-from ballowner import BallOwner
-from action import Action
+from .ballowner import BallOwner
+from .action import Action
 import random
 
 # get the vector pointing from [coor2] to [coor1] and 
