@@ -489,7 +489,11 @@ class Futbol(gym.Env):
 
         run_to_ball_reward_coefficient = 10
 
-        return np.max(difference_arr) * run_to_ball_reward_coefficient
+        if self.number_of_player == 5:
+            # reward attacker run to ball
+            return (difference_arr[3] + difference_arr[4]) * run_to_ball_reward_coefficient
+        else:
+            return np.max(difference_arr) * run_to_ball_reward_coefficient
 
     def get_ball_reward(self, ball_init, ball_after):
 
