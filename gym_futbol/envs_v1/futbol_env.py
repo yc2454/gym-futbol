@@ -24,8 +24,8 @@ TOTAL_TIME = 30  # 30 s
 
 TIME_STEP = 0.1  # 0.1 s
 
-# player number each team, less than 3 for now
-NUMBER_OF_PLAYER = 10
+# player number each team, less than 10
+NUMBER_OF_PLAYER = 2
 
 BALL_MAX_VELOCITY = 25
 PLAYER_MAX_VELOCITY = 10
@@ -43,9 +43,9 @@ BALL_range_arr = (BALL_max_arr - BALL_min_arr) / 2
 
 padding = 3
 PLAYER_max_arr = np.array(
-    [WIDTH + padding, HEIGHT, PLAYER_MAX_VELOCITY, PLAYER_MAX_VELOCITY] * NUMBER_OF_PLAYER)
+    [WIDTH + padding, HEIGHT, PLAYER_MAX_VELOCITY, PLAYER_MAX_VELOCITY])
 PLAYER_min_arr = np.array(
-    [0 - padding, 0, -PLAYER_MAX_VELOCITY, -PLAYER_MAX_VELOCITY] * NUMBER_OF_PLAYER)
+    [0 - padding, 0, -PLAYER_MAX_VELOCITY, -PLAYER_MAX_VELOCITY])
 PLAYER_avg_arr = (PLAYER_max_arr + PLAYER_min_arr) / 2
 PLAYER_range_arr = (PLAYER_max_arr - PLAYER_min_arr) / 2
 
@@ -60,11 +60,17 @@ def get_vec(coor_t, coor_o):
 
 
 class Futbol(gym.Env):
-    def __init__(self, width=WIDTH, height=HEIGHT, total_time=TOTAL_TIME, debug=False):
+    def __init__(self, width=WIDTH, height=HEIGHT,
+                 total_time=TOTAL_TIME, debug=False,
+                 number_of_player=NUMBER_OF_PLAYER):
         self.width = width
         self.height = height
         self.total_time = total_time
         self.debug = debug
+        self.number_of_player = number_of_player
+
+        self.PLAYER_avg_arr = np.tile(PLAYER_avg_arr, number_of_player)
+        self.PLAYER_range_arr = np.tile(PLAYER_range_arr, number_of_player)
 
         # action space
         # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
@@ -73,9 +79,6 @@ class Futbol(gym.Env):
         # 3) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
         self.action_space = spaces.MultiDiscrete(
             [5, 2, 2, 2] * NUMBER_OF_PLAYER)
-
-        # player number each team
-        self.number_of_player = NUMBER_OF_PLAYER
 
         # observation space (normalized)
         # [0] x position
@@ -158,7 +161,7 @@ class Futbol(gym.Env):
 
     def _normalize_player(self, player_observation):
         player_observation = (player_observation -
-                              PLAYER_avg_arr) / PLAYER_range_arr
+                              self.PLAYER_avg_arr) / self.PLAYER_range_arr
         return player_observation
 
     # normalized observation
