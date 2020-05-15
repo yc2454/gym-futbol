@@ -2,6 +2,7 @@ import pymunk
 from pymunk.vec2d import Vec2d
 from .player import Player
 import numpy as np
+import random
 
 
 class Team():
