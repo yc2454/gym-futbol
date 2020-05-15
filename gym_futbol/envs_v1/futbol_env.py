@@ -25,7 +25,7 @@ TOTAL_TIME = 30  # 30 s
 TIME_STEP = 0.1  # 0.1 s
 
 # player number each team, less than 10
-NUMBER_OF_PLAYER = 2
+NUMBER_OF_PLAYER = 5
 
 BALL_MAX_VELOCITY = 25
 PLAYER_MAX_VELOCITY = 10
@@ -76,7 +76,7 @@ class Futbol(gym.Env):
         # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
         # 2) Button A (dash):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
         # 3) Button B (shoot):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-        # 3) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
+        # 4) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
         self.action_space = spaces.MultiDiscrete(
             [5, 2, 2, 2] * NUMBER_OF_PLAYER)
 
@@ -147,7 +147,7 @@ class Futbol(gym.Env):
 
     def reset(self):
         self.current_time = 0
-        self.ball_owner_side = None
+        self.ball_owner_side = random.choice(["left", "right"])
         self._position_to_initial()
         return self._get_observation()
 
@@ -414,7 +414,7 @@ class Futbol(gym.Env):
     # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
     # 2) Button A (dash):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
     # 3) Button B (shoot):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-    # 3) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
+    # 4) Button C (press):   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
     def step(self, left_player_action):
 
         right_player_action = self.random_action()
@@ -463,7 +463,7 @@ class Futbol(gym.Env):
             goal_reward = 1000
             reward += goal_reward if bx > self.width - 2 else -goal_reward
             self._position_to_initial()
-            self.ball_owner_side = None
+            self.ball_owner_side = random.choice(["left", "right"])
             # done = True
 
         self.current_time += TIME_STEP
@@ -490,8 +490,7 @@ class Futbol(gym.Env):
         run_to_ball_reward_coefficient = 10
 
         if self.number_of_player == 5:
-            # reward attacker run to ball
-            return (difference_arr[3] + difference_arr[4]) * run_to_ball_reward_coefficient
+            return np.max([difference_arr[3], difference_arr[4]]) * run_to_ball_reward_coefficient
         else:
             return np.max(difference_arr) * run_to_ball_reward_coefficient
 
