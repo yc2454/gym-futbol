@@ -25,7 +25,7 @@ TOTAL_TIME = 30  # 30 s
 TIME_STEP = 0.1  # 0.1 s
 
 # player number each team, less than 3 for now
-NUMBER_OF_PLAYER = 2
+NUMBER_OF_PLAYER = 10
 
 BALL_MAX_VELOCITY = 25
 PLAYER_MAX_VELOCITY = 10
@@ -368,7 +368,7 @@ class Futbol(gym.Env):
                     ball_to_goal_vec[1] / ball_to_goal_vec_mag
 
                 # decrease the velocity influence on shoot
-                self.ball.body.velocity /= 10
+                self.ball.body.velocity /= 2
 
                 self.ball_owner_side = player.side
                 self.ball.apply_force_to_ball(ball_force_x, ball_force_y)

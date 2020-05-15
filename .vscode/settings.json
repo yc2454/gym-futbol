@@ -1,6 +1,6 @@
 {
     "python.linting.enabled": true,
-    "python.pythonPath": "/bin/python3.7",
+    "python.pythonPath": "/opt/local/bin/python",
     "python.linting.banditEnabled": false,
     "python.linting.pylintEnabled": true
 }

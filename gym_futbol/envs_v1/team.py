@@ -30,6 +30,49 @@ class Team():
             for i in range(player_number):
                 self.y_pos_array.append(y_increment * (i+1))
 
+        elif player_number <= 6:
+            # get x position for each player
+            if side == "left":
+                self.x_pos_array = [width * 1/6] * 3 + \
+                    [width * 2/6] * (player_number-3)
+            elif side == "right":
+                self.x_pos_array = [width * 5/6] * 3 + \
+                    [width * 4/6] * (player_number-3)
+            else:
+                print("invalid side")
+            # get y position for each player
+            y_increment = height / (3 + 1)
+            self.y_pos_array = []
+            for i in range(3):
+                self.y_pos_array.append(y_increment * (i+1))
+            y_increment = height / (player_number - 3 + 1)
+            for i in range(player_number-3):
+                self.y_pos_array.append(y_increment * (i+1))
+
+        # 7 player might look wired
+        elif player_number <= 10:
+            # get x position for each player
+            if side == "left":
+                self.x_pos_array = [width * 1/8] * 4 + [width *
+                                                        2/8] * 3 + [width * 3/8] * (player_number-7)
+            elif side == "right":
+                self.x_pos_array = [width * 7/8] * 4 + [width *
+                                                        6/8] * 3 + [width * 5/8] * (player_number-7)
+            else:
+                print("invalid side")
+            # get y position for each player
+            y_increment = height / (4 + 1)
+            self.y_pos_array = []
+            for i in range(4):
+                self.y_pos_array.append(y_increment * (i+1))
+
+            y_increment = height / (3 + 1)
+            for i in range(3):
+                self.y_pos_array.append(y_increment * (i+1))
+
+            y_increment = height / (player_number - 7 + 1)
+            for i in range(player_number - 7):
+                self.y_pos_array.append(y_increment * (i+1))
         else:
             print("unimplemented")
 
