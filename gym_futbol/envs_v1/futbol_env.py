@@ -74,7 +74,7 @@ class Futbol(gym.Env):
 
         # action space
         # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
-        # 2) Action Keys: Discrete 4  - noop[0], dash[1], shoot[2], press[3], pass[4] - params: min: 0, max: 4
+        # 2) Action Keys: Discrete 5  - noop[0], dash[1], shoot[2], press[3], pass[4] - params: min: 0, max: 4
         self.action_space = spaces.MultiDiscrete(
             [5, 5] * self.number_of_player)
 
@@ -388,7 +388,9 @@ class Futbol(gym.Env):
                 player.apply_force_to_player(player_force_x, player_force_y)
             # no ball, arrow keys pressed, run as the arrow key
             else:
-                pass
+                player.apply_force_to_player((PLAYER_FORCE_LIMIT - 5) * force_x,
+                                             (PLAYER_FORCE_LIMIT - 5) * force_y)
+                self._ball_move_with_player(player)
 
         # pass [4]
         elif action[1] == 4:
@@ -421,10 +423,9 @@ class Futbol(gym.Env):
         else:
             print("invalid action key")
 
-    # action should be np.array
     # action space
     # 1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
-    # 2) Action Keys: Discrete 4  - noop[0], dash[1], shoot[2], press[3] - params: min: 0, max: 3
+    # 2) Action Keys: Discrete 5  - noop[0], dash[1], shoot[2], press[3], pass[4] - params: min: 0, max: 4
     def step(self, left_player_action):
 
         right_player_action = np.reshape(self.random_action(), (-1, 2))
@@ -514,4 +515,3 @@ class Futbol(gym.Env):
         _, ball_i_to_goal = get_vec(ball_init, goal)
 
         return (ball_i_to_goal - ball_a_to_goal) * ball_to_goal_reward_coefficient
-
