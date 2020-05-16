@@ -388,9 +388,7 @@ class Futbol(gym.Env):
                 player.apply_force_to_player(player_force_x, player_force_y)
             # no ball, arrow keys pressed, run as the arrow key
             else:
-                player.apply_force_to_player((PLAYER_FORCE_LIMIT - 5) * force_x,
-                                             (PLAYER_FORCE_LIMIT - 5) * force_y)
-                self._ball_move_with_player(player)
+                pass
 
         # pass [4]
         elif action[1] == 4:
