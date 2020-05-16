@@ -16,6 +16,40 @@ class Team():
         self.side = side
 
         self.player_number = player_number
+
+        self._create_pos_array(player_number, side, width, height)
+        self._create_color_array(color, player_number)
+
+        self.player_array = []
+        for x, y, c in zip(self.x_pos_array, self.y_pos_array, self.color_array):
+            self.player_array.append(
+                Player(self.space, x, y,
+                       mass=player_weight,
+                       color=c,
+                       max_velocity=player_max_velocity,
+                       elasticity=elasiticity,
+                       side=side))
+
+    # only implemented with red and blue
+    def _create_color_array(self, color, player_number):
+        if player_number == 1:
+            self.color_array = [color]
+        else:
+            green_range = 0.7
+            if color == (1, 0, 0, 1):
+                color_intrement = green_range/(player_number - 1)
+                self.color_array = []
+                for i in range(player_number):
+                    self.color_array.append((1, color_intrement*i, 0, 1))
+            elif color == (0, 0, 1, 1):
+                color_intrement = green_range/(player_number - 1)
+                self.color_array = []
+                for i in range(player_number):
+                    self.color_array.append((0, color_intrement*i, 1, 1))
+            else:
+                self.color_array = [color] * player_number
+
+    def _create_pos_array(self, player_number, side, width, height):
         # implement for 3 players and fewer now
         if player_number <= 3:
             # get x position for each player
@@ -76,16 +110,6 @@ class Team():
                 self.y_pos_array.append(y_increment * (i+1))
         else:
             print("unimplemented")
-
-        self.player_array = []
-        for x, y in zip(self.x_pos_array, self.y_pos_array):
-            self.player_array.append(
-                Player(self.space, x, y,
-                       mass=player_weight,
-                       color=color,
-                       max_velocity=player_max_velocity,
-                       elasticity=elasiticity,
-                       side=side))
 
     def set_position_to_initial(self):
         for player, x, y in zip(self.player_array, self.x_pos_array, self.y_pos_array):
